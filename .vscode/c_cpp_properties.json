@@ -3,7 +3,7 @@
     {
       "name": "windows-msvc-x64",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/*.cpp"
       ],
       "compilerPath": "cl.exe",
       "cStandard": "c11",

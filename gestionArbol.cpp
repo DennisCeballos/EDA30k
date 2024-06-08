@@ -6,7 +6,7 @@
 #include <queue>
 #include <cmath>
 
-#include "ArbolRB.cpp"
+#include "ArbolRB.h"
 
 //En este archivo se definen las clases importantes del proyecto
 // - Elemento de Nodos

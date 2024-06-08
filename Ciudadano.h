@@ -1,19 +1,18 @@
+#include <iostream>
 #include <string>
-
-using namespace std;
 
 struct Ciudadano
 {
 public:
 
     int dni;
-    string datos;
+    std::string datos;
 
     Ciudadano() { };
 
     Ciudadano( 
                 int _dni,
-                string _datos
+                std::string _datos
             )
     {
         //strncpy(this->datos, _datos, sizeof(this->datos));
@@ -24,17 +23,7 @@ public:
     ~Ciudadano() = default;
 
     //Es el sizeOf calculado individualmente por cada elemento de la clase
-    static int getSizeofInd()
-    {
-        return
-        {
-            sizeof(Ciudadano::dni) +
-            sizeof(Ciudadano::datos)
-        };
-        /*
-        return sizeof(Ciudadano);
-        */
-    }
+    const static int getSizeofInd = 36; //sizeof(Ciudadano::dni) + sizeof(Ciudadano::datos) ;
 
     static void printOffset()
     {
@@ -45,7 +34,7 @@ public:
 
     //Getters
     int getDni()        { return dni; }
-    string getDatos()   { return datos; }
+    std::string getDatos()   { return datos; }
 
 };
 

@@ -40,14 +40,21 @@ class CtrlCiudadano
             myfile.open(nombreArchivo, ios::binary | ios::out | ios::app);
 
             //Moverse hasta el final del archivo
-            myfile.seekp(sizeof(Ciudadano)*this->nroElementos, ios::end);
+            myfile.seekp(Ciudadano::getSizeofInd*this->nroElementos, ios::end);
             
             //Guardar la posicion actual del documento (o sea justo donde se va guardar al ciudadano)
             int pos = myfile.tellp();
 
             //Almacenar el ciudadano en binario
+            //  primero guardar el dni
             myfile.write(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
-            myfile.write(reinterpret_cast<char*>(&ciudadano->datos), sizeof(Ciudadano::datos));
+
+            //  almacenar el tamano del string en binario
+            int strSize = ciudadano->datos.size();
+            myfile.write(reinterpret_cast<char*>(&strSize),sizeof(int));
+
+            // escribir el string
+            myfile.write((ciudadano->datos.c_str()), strSize);
 
             //Cerrar el archivo por seguridad
             myfile.close();
@@ -115,11 +122,20 @@ class CtrlCiudadano
                 }
 
                 // Mueve el puntero la cantidad de espacios necesarios
-                otroFile.seekg(sizeof(Ciudadano)*id, ios::beg);
+                otroFile.seekg(Ciudadano::getSizeofInd*id, ios::beg);
                 
                 // Lee los datos desde el binario y carga los datos al objeto
                 otroFile.read(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
-                otroFile.read(reinterpret_cast<char*>(&ciudadano->datos), sizeof(Ciudadano::datos));
+
+                //  lee el string con datos
+                int strSize;
+                otroFile.read(reinterpret_cast<char*>(&strSize), sizeof(int));
+                char* strData = new char[strSize+1]; 
+                otroFile.read(strData,strSize);
+                strData[strSize] = '\0';
+                ciudadano->datos = strData;
+                
+                delete[] strData;
                 
                 if (!otroFile)
                 {
@@ -167,18 +183,19 @@ int main()
     );
 
     cout<<"tamano"<<sizeof(Ciudadano)<<endl;
-    cout<<"tamanoIndi"<<sizeof(Ciudadano::getSizeofInd())<<endl;
+    cout<<"tamanoIndi"<<sizeof(Ciudadano::getSizeofInd)<<endl;
     cout<<"tamano indio"<<sizeof(Ciudadano::datos) + sizeof(Ciudadano::dni)<<endl;
     
-    int sitio = -1;
-    sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
-    cout<<">>"<<sitio<<endl;
     
-    sitio = ctrlCiudadano.guardarCiudadano(juan, true);
-    cout<<">>"<<sitio<<endl;
-
-    sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
-    cout<<">>"<<sitio<<endl;
+    //int sitio = -1;
+    //sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
+    //cout<<">>"<<sitio<<endl;
+    //
+    //sitio = ctrlCiudadano.guardarCiudadano(juan, true);
+    //cout<<">>"<<sitio<<endl;
+    //
+    //sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
+    //cout<<">>"<<sitio<<endl;
 
     //clock_t start = clock();
     //
@@ -199,7 +216,7 @@ int main()
     Ciudadano* fin = ctrlCiudadano.obtenerCiudadanoEnPos(0, true);
     cout<<fin->getDni()<<endl;
     cout<<fin->getDatos()<<endl;
-
+    
 
 
     return 0;
