@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "console": "externalTerminal",
+      "cwd": "c:/Users/daceb/OneDrive/Documentos/Usil 8cho/Estructuras Datos/TF sin Boost",
+      "program": "c:/Users/daceb/OneDrive/Documentos/Usil 8cho/Estructuras Datos/TF sin Boost/build/Debug/outDebug"
+    }
+  ]
+}
