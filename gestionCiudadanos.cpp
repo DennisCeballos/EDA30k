@@ -36,11 +36,11 @@ class CtrlCiudadano
         {
             ofstream myfile;
 
-            //Se abre el archivo en binario | salida de datos
+            //Se abre el archivo en binario | salida de datos | final del archivo
             myfile.open(nombreArchivo, ios::binary | ios::out | ios::app);
 
             //Moverse hasta el final del archivo
-            myfile.seekp(Ciudadano::getSizeofInd*this->nroElementos, ios::end);
+            myfile.seekp(0, ios::end); //Ciudadano::getSizeofInd*this->nroElementos
             
             //Guardar la posicion actual del documento (o sea justo donde se va guardar al ciudadano)
             int pos = myfile.tellp();
@@ -50,7 +50,7 @@ class CtrlCiudadano
             myfile.write(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
 
             // escribir la cadena de datos
-            myfile.write(ciudadano->datos, Ciudadano::sizeDatos);
+            myfile.write(reinterpret_cast<char*>(&ciudadano->datos), Ciudadano::sizeDatos);
 
             //Cerrar el archivo por seguridad
             myfile.close();
@@ -124,7 +124,7 @@ class CtrlCiudadano
                 otroFile.read(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
 
                 //  lee el string con datos
-                otroFile.read(reinterpret_cast<char*>(&ciudadano->datos), sizeof(Ciudadano::sizeDatos));
+                otroFile.read(reinterpret_cast<char*>(&ciudadano->datos), Ciudadano::sizeDatos);
                 
                 if (!otroFile)
                 {
@@ -170,11 +170,6 @@ int main()
     Ciudadano* promedio = new Ciudadano(
         66677700, "promedio, peruana, Callao, Casa cualquiera, 111555999, nica, Viudo"
     );
-
-    cout<<"tamano      "<<sizeof(Ciudadano)<<endl;
-    cout<<"tamano Indi "<<sizeof(Ciudadano::getSizeofInd)<<endl;
-    cout<<"tamano calc "<<sizeof(&Ciudadano::datos) + sizeof(Ciudadano::dni)<<endl;
-    
     
     int sitio = -1;
     sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
@@ -202,11 +197,9 @@ int main()
     //cout<<"Tiempo de ejecucion: "<<tiempo_transcurrido<<" segundos"<<endl;
 
     cout<<"Datos extraidos:"<<endl;
-    Ciudadano* fin = ctrlCiudadano.obtenerCiudadanoEnPos(0, true);
+    Ciudadano* fin = ctrlCiudadano.obtenerCiudadanoEnPos(2, true);
     cout<<fin->getDni()<<endl;
     cout<<fin->getDatos()<<endl;
-    
-
 
     return 0;
 }
