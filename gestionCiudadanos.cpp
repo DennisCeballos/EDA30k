@@ -49,17 +49,13 @@ class CtrlCiudadano
             //  primero guardar el dni
             myfile.write(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
 
-            //  almacenar el tamano del string en binario
-            int strSize = ciudadano->datos.size();
-            myfile.write(reinterpret_cast<char*>(&strSize),sizeof(int));
-
-            // escribir el string
-            myfile.write((ciudadano->datos.c_str()), strSize);
+            // escribir la cadena de datos
+            myfile.write(ciudadano->datos, Ciudadano::sizeDatos);
 
             //Cerrar el archivo por seguridad
             myfile.close();
 
-            if (debug) { cout<<"Guardado correctamente al ciudadano "<<ciudadano->datos.substr(0,10)<<" en pos "<<pos<<endl; }
+            if (debug) { cout<<"Guardado correctamente al ciudadano "<<ciudadano->datos[0,10]<<" en pos "<<pos<<endl; }
             this->nroElementos += 1;
             return pos;
         }
@@ -128,14 +124,7 @@ class CtrlCiudadano
                 otroFile.read(reinterpret_cast<char*>(&ciudadano->dni), sizeof(Ciudadano::dni));
 
                 //  lee el string con datos
-                int strSize;
-                otroFile.read(reinterpret_cast<char*>(&strSize), sizeof(int));
-                char* strData = new char[strSize+1]; 
-                otroFile.read(strData,strSize);
-                strData[strSize] = '\0';
-                ciudadano->datos = strData;
-                
-                delete[] strData;
+                otroFile.read(reinterpret_cast<char*>(&ciudadano->datos), sizeof(Ciudadano::sizeDatos));
                 
                 if (!otroFile)
                 {
@@ -182,20 +171,20 @@ int main()
         66677700, "promedio, peruana, Callao, Casa cualquiera, 111555999, nica, Viudo"
     );
 
-    cout<<"tamano"<<sizeof(Ciudadano)<<endl;
-    cout<<"tamanoIndi"<<sizeof(Ciudadano::getSizeofInd)<<endl;
-    cout<<"tamano indio"<<sizeof(Ciudadano::datos) + sizeof(Ciudadano::dni)<<endl;
+    cout<<"tamano      "<<sizeof(Ciudadano)<<endl;
+    cout<<"tamano Indi "<<sizeof(Ciudadano::getSizeofInd)<<endl;
+    cout<<"tamano calc "<<sizeof(&Ciudadano::datos) + sizeof(Ciudadano::dni)<<endl;
     
     
-    //int sitio = -1;
-    //sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
-    //cout<<">>"<<sitio<<endl;
-    //
-    //sitio = ctrlCiudadano.guardarCiudadano(juan, true);
-    //cout<<">>"<<sitio<<endl;
-    //
-    //sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
-    //cout<<">>"<<sitio<<endl;
+    int sitio = -1;
+    sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
+    cout<<">>"<<sitio<<endl;
+    
+    sitio = ctrlCiudadano.guardarCiudadano(juan, true);
+    cout<<">>"<<sitio<<endl;
+    
+    sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
+    cout<<">>"<<sitio<<endl;
 
     //clock_t start = clock();
     //
