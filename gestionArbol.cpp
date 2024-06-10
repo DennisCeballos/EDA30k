@@ -7,7 +7,6 @@
 #include <cmath>
 
 #include "ArbolRB.h"
-
 //En este archivo se definen las clases importantes del proyecto
 // - Elemento de Nodos
 // - Nodos
@@ -33,10 +32,12 @@ public:
 
 
     //Copias de las operaciones del ArbolRojo pero aplicadas sobre el disco
-    void Insertar_Disco(Elemento elemento);
-    void AjustarInsercion_Disco();
+    void Insertar_Disco(std::fstream& data_stream, Elemento elemento);
+    void InsertarRecursivamente_Disco(std::fstream& data_stream, Nodo* nuevoNodo);
 
 
+
+    void CambiarColor_Disco(std::fstream& data_stream, int idNodo, bool color);
 
     int buscarPorDNI_Disco(int ciudadanoId);
     
@@ -44,12 +45,29 @@ public:
     //Control de nodos
     //
     //
-    int guardarNodo(Nodo* nodo);
+    int guardarNodo_Disco(std::fstream& data_stream, Nodo* nodo);
     void actualizarNodoArchivo(int nodoId);
     void guardarNodosEnDisco_MASIVO(ArbolRB* arbol);
     Nodo* buscarNodoEnArchivo(int nodoId);
 
 };
+
+void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
+{
+
+    Nodo *nuevoNodo = CrearNodo(elemento);
+    if (this->idRaiz==-1)
+    {
+        this->idRaiz = guardarNodo_Disco(data_stream, nuevoNodo);
+        CambiarColor_Disco(data_stream, ROJO)
+    }
+    else
+    {
+        InsertarRecursivamente_Disco(data_stream, nuevoNodo);
+        CambiarColor_Disco(data_stream, nuevoNodo, ROJO);
+    }
+
+}
 
 // Constructor de la clase
 ArbolEnDisco::ArbolEnDisco(const char* filename)
@@ -87,21 +105,6 @@ ArbolEnDisco::ArbolEnDisco(const char* filename)
         
         //Cerrar el archivo
         fileOUT.close();
-    }
-
-}
-
-//Funcion para insertar un elemento al arbol
-void ArbolEnDisco::Insertar_Disco(Elemento elemento)
-{
-    //Crea el nuevo nodo a insertar
-    Nodo* nuevoNodo = new Nodo(elemento);
-
-    if (arbolMemoria->raiz == nullptr)
-    {
-        arbolMemoria->raiz = nuevoNodo;
-        //this->CambiarColor(arbolMemoria, NEGRO);
-        
     }
 
 }
@@ -178,36 +181,25 @@ Nodo* ArbolEnDisco::buscarNodoEnArchivo(int nodoId)
     return encontrado;
 }
 
-//Funcion para actualizar datos sobre un nodo
-void ArbolEnDisco::actualizarNodoArchivo(int nodoId)
-{
-
-}
-
 //Guarda un nodo en Disco y retorna su ID(ubicacion relativa)
-int ArbolEnDisco::guardarNodo(Nodo* nodo)
+int ArbolEnDisco::guardarNodo_Disco(std::fstream& data_stream, Nodo* nodo)
 {
-    //Abrir el archivo en binario
-    std::ofstream file;
-    file.open(this->nombreArchivo, std::ios::out | std::ios::binary);
 
     //Moverse al final del archivo
-    file.seekp(0, std::ios::end);
+    data_stream.seekp(0, std::ios::end);
     
     //Guardar posicion en el archivo
-    int pos = file.tellp();
+    int pos = data_stream.tellp();
 
     //! IMPORTANTE EL ORDEN EN EL QUE SE GUARDAN AL ARCHIVO
     //ESTA *ES* LA ESTRUCTURA DE UN NODO EN BINARIO
-    file.write(reinterpret_cast<char*>(nodo->idIzquierda), sizeof(int));
-    file.write(reinterpret_cast<char*>(nodo->idDerecha), sizeof(int));
-    file.write(reinterpret_cast<char*>(nodo->idPadre), sizeof(int));
-    file.write(reinterpret_cast<char*>(nodo->elemento.dni), sizeof(int));
-    file.write(reinterpret_cast<char*>(nodo->elemento.id), sizeof(int));
-    file.write(reinterpret_cast<char*>(nodo->color), sizeof(bool));
+    data_stream.write(reinterpret_cast<char*>(nodo->idIzquierda), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(nodo->idDerecha), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(nodo->idPadre), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(nodo->elemento.dni), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(nodo->elemento.id), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(nodo->color), sizeof(bool));
     
-    //Cerrar el archivo
-    file.close();
     this->nroNodos += 1;
 
     return pos;
@@ -281,7 +273,7 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB* arbol)
     
 }
 
-int otro2()
+int main()
 {
     ArbolRB arbol;
     // Insercion del id y dni
@@ -299,16 +291,16 @@ int otro2()
         std::cout << "No se encontro un ID del DNI " << 2365 << std::endl;
     }
 
-    ArbolEnDisco guardado("Arbol.bin");
-    guardado.guardarNodosEnDisco_MASIVO(&arbol);
-    
-
-    Nodo* avr = guardado.buscarNodoEnArchivo(0);
-    std::cout<<avr->elemento.dni<<std::endl;
-    std::cout<<avr->elemento.id<<std::endl;
-    std::cout<<avr->idDerecha<<std::endl;
-    std::cout<<avr->idIzquierda<<std::endl;
-    std::cout<<avr->idPadre<<std::endl;
+    //ArbolEnDisco guardado("Arbol.bin");
+    //guardado.guardarNodosEnDisco_MASIVO(&arbol);
+    //
+    //
+    //Nodo* avr = guardado.buscarNodoEnArchivo(0);
+    //std::cout<<avr->elemento.dni<<std::endl;
+    //std::cout<<avr->elemento.id<<std::endl;
+    //std::cout<<avr->idDerecha<<std::endl;
+    //std::cout<<avr->idIzquierda<<std::endl;
+    //std::cout<<avr->idPadre<<std::endl;
     
     return 0;
 }
