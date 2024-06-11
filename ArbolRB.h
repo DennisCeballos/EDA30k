@@ -18,6 +18,7 @@ struct Nodo
 {
     Elemento elemento {-1, -1};
     bool color {ROJO};
+    int id {-1};
 
     Nodo *izquierda { nullptr };
     int idIzquierda {-1};
@@ -60,18 +61,23 @@ struct ArbolRB
 };
 
 void Insertar               (ArbolRB *arbol, Elemento elem);
-void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 void InsertarRecursivamente (Nodo *nodoActual, Nodo *nuevoNodo);
+void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 
 Nodo *Buscar                (ArbolRB *arbol, int valor);
+
 Nodo *Eliminar              (ArbolRB *arbol, int valor);
 Nodo *ObtenerSiguiente      (Nodo *nodo);
 void AjustarEliminacion     (ArbolRB *arbol, Nodo *nodo);
+bool ColorDeNodo            (Nodo *nodo);
+
 Nodo *CrearNodo             (Elemento elem);
+
 void RotarIzquierda         (ArbolRB *arbol, Nodo *nodo);
 void RotarDerecha           (ArbolRB *arbol, Nodo *nodo);
+
 void CambiarColor           (Nodo *nodo, bool color);
-bool ColorDeNodo            (Nodo *nodo);
+
 void PrintColor             (Nodo *nodo);
 
 int BuscarPorDni            (ArbolRB *arbol, int dni);

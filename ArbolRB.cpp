@@ -268,6 +268,15 @@ void AjustarEliminacion(ArbolRB *arbol, Nodo *nodo)
     CambiarColor(nodo, NEGRO);
 }
 
+bool ColorDeNodo(Nodo *nodo)
+{
+    if (nodo == nullptr)
+    {
+        return NEGRO;
+    }
+    return nodo->color;
+}
+
 //Funcion para crear un nodo
 Nodo* CrearNodo(Elemento elem)
 {
@@ -330,15 +339,6 @@ void CambiarColor(Nodo *nodo, bool color)
     {
         nodo->color = color;
     }
-}
-
-bool ColorDeNodo(Nodo *nodo)
-{
-    if (nodo == nullptr)
-    {
-        return NEGRO;
-    }
-    return nodo->color;
 }
 
 void PrintColor(Nodo *nodo)
