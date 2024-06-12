@@ -72,9 +72,55 @@ public:
     
     Nodo* obtenerNodo_Disco(std::fstream& data_stream, int nodoId);
     
-    bool actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoId, EditarNodo variableEditar, int nuevoValor);
+    void actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoId, EditarNodo variableEditar, int nuevoValor);
 
 };
+
+// Constructor de la clase
+ArbolEnDisco::ArbolEnDisco(const char* filename)
+{
+    this->nombreArchivo = filename;
+    this->idRaiz = -1;
+    this->nroNodos = 0;
+    this->arbolMemoria = new ArbolRB; //Se genera un arbol con raiz nula
+
+
+    std::fstream fileIN(filename, std::ios::in | std::ios::binary);
+
+    // Revisa que el archivo exista
+    if (fileIN.is_open())
+    {
+        //Si EXISTE
+        // *Obtener los datos desde la cabecera
+        fileIN.seekg(0, std::ios::beg);
+        fileIN.read(reinterpret_cast<char*>(&this->nroNodos),sizeof(nroNodos));
+        fileIN.read(reinterpret_cast<char*>(&this->idRaiz),sizeof(idRaiz));
+
+        // Agregar la raiz al arbol
+        Nodo* raiz = obtenerNodo_Disco(fileIN, this->idRaiz);
+        arbolMemoria->raiz = raiz;
+
+
+        //Cerrar el archivo
+        fileIN.close();
+    }
+    else
+    {
+        //SI EL ARCHIVO NO EXISTE
+        //* Crea un nuevo archivo 
+        std::fstream fileOUT(filename, std::ios::out | std::ios::binary);
+        
+        // *Grabar la cabecera de archivo
+        fileOUT.seekp(0, std::ios::beg);
+        fileOUT.write(reinterpret_cast<char*>(&nroNodos), sizeof(nroNodos));
+        fileOUT.write(reinterpret_cast<char*>(&idRaiz), sizeof(idRaiz));
+
+        fileOUT.flush();
+        //Cerrar el archivo
+        fileOUT.close();
+    }
+
+}
 
 void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
 {
@@ -197,47 +243,6 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
 }
 
 
-// Constructor de la clase
-ArbolEnDisco::ArbolEnDisco(const char* filename)
-{
-    this->nombreArchivo = filename;
-    this->arbolMemoria = new ArbolRB; //Se genera un arbol con raiz nula
-
-    std::fstream fileIN(filename, std::ios::in | std::ios::binary);
-
-    // Revisa que el archivo exista
-    if (fileIN.is_open())
-    {
-        //Si EXISTE
-        // *Obtener los datos desde la cabecera
-        fileIN.seekg(0, std::ios::beg);
-        fileIN.read(reinterpret_cast<char*>(&nroNodos),sizeof(nroNodos));
-        fileIN.read(reinterpret_cast<char*>(&idRaiz),sizeof(idRaiz));
-
-        // Agregar la raiz al arbol
-        Nodo* raiz = obtenerNodo_Disco(fileIN, this->idRaiz);
-        arbolMemoria->raiz = raiz;
-
-        //Cerrar el archivo
-        fileIN.close();
-    }
-    else
-    {
-        //SI EL ARCHIVO NO EXISTE
-        //* Crea un nuevo archivo 
-        std::fstream fileOUT(filename, std::ios::binary | std::ios::out);
-        
-        // *Grabar la cabecera de archivo
-        fileOUT.seekp(0, std::ios::beg);
-        fileOUT.write(reinterpret_cast<char*>(&nroNodos), sizeof(nroNodos));
-        fileOUT.write(reinterpret_cast<char*>(&idRaiz), sizeof(idRaiz));
-        
-        //Cerrar el archivo
-        fileOUT.close();
-    }
-
-}
-
 /*?
 //??
 // Funcion para obtener el id de un ciudadano de acuerdo a su dni
@@ -287,6 +292,8 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
     //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
     data_stream.seekg( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * nodoId, std::ios::beg);
 
+    int posDebug = data_stream.tellg();
+
     //! IMPORTANTE EL ORDEN EN EL QUE SE GUARDAN AL ARCHIVO
     //ESTA *ES* LA ESTRUCTURA DE UN NODO EN BINARIO
     data_stream.read(reinterpret_cast<char*>(&encontrado->idIzquierda), sizeof(int));
@@ -295,8 +302,6 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
     data_stream.read(reinterpret_cast<char*>(&encontrado->elemento.dni), sizeof(int));
     data_stream.read(reinterpret_cast<char*>(&encontrado->elemento.id), sizeof(int));
     data_stream.read(reinterpret_cast<char*>(&encontrado->color), sizeof(bool));
-
-    data_stream.close();
 
     if (encontrado->elemento.dni == -1) //Significa que en realidad es un elemento nulo
     {
@@ -309,6 +314,11 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
 //Guarda un nodo en Disco y retorna su ID(ubicacion relativa)
 Nodo* ArbolEnDisco::CrearNodo_Disco(std::fstream& data_stream, Elemento elemento)
 {
+    if (!data_stream.is_open())
+    {
+        return nullptr;
+    }
+    
     //Crear el nodo que se va almacenar
     Nodo* nodo = new Nodo(elemento);
 
@@ -320,12 +330,13 @@ Nodo* ArbolEnDisco::CrearNodo_Disco(std::fstream& data_stream, Elemento elemento
 
     //! IMPORTANTE EL ORDEN EN EL QUE SE GUARDAN AL ARCHIVO
     //ESTA *ES* LA ESTRUCTURA DE UN NODO EN BINARIO
-    data_stream.write(reinterpret_cast<char*>(nodo->idIzquierda), sizeof(int));
-    data_stream.write(reinterpret_cast<char*>(nodo->idDerecha), sizeof(int));
-    data_stream.write(reinterpret_cast<char*>(nodo->idPadre), sizeof(int));
-    data_stream.write(reinterpret_cast<char*>(nodo->elemento.dni), sizeof(int));
-    data_stream.write(reinterpret_cast<char*>(nodo->elemento.id), sizeof(int));
-    data_stream.write(reinterpret_cast<char*>(nodo->color), sizeof(bool));
+    data_stream.write(reinterpret_cast<char*>(&nodo->idIzquierda), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(&nodo->idDerecha), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(&nodo->idPadre), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(&nodo->elemento.dni), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(&nodo->elemento.id), sizeof(int));
+    data_stream.write(reinterpret_cast<char*>(&nodo->color), sizeof(bool));
+    data_stream.flush();
     
     this->nroNodos += 1;
     
@@ -402,13 +413,16 @@ void ArbolEnDisco::CambiarColor_Disco(std::fstream &data_stream, int idNodo, boo
     {
         //  METERSE AL DISCO
         //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
-        data_stream.seekg( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * idNodo, std::ios::beg);
+        data_stream.seekp( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * idNodo, std::ios::beg);
 
-        
-
+        //Moverse todas las posiciones hasta llegar al dato color
+        data_stream.seekp( sizeof(int)*5, std::ios::cur);
+        //Cambiar el valor de color
+        data_stream.write(reinterpret_cast<char*>(&color), sizeof(bool));
     }
 
 }
+
 
 //Recibe un arbol binario y lo almacena en disco, por defecto dejara a la raiz en la primera posicion del archivo
 void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB* arbol)
@@ -478,7 +492,7 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB* arbol)
     
 }
 
-bool ArbolEnDisco::actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoIdModificar, EditarNodo variableEditar, int nuevoValor)
+void ArbolEnDisco::actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoIdModificar, EditarNodo variableEditar, int nuevoValor)
 {
     //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
     data_stream.seekg( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * nodoIdModificar, std::ios::beg);
@@ -503,7 +517,8 @@ bool ArbolEnDisco::actualizarDatosNodo_Disco(std::fstream& data_stream, int nodo
     }
 }
 
-int main()
+
+int mainMemoria() //main memoria
 {
     ArbolRB arbol;
     // Insercion del id y dni
@@ -531,6 +546,47 @@ int main()
     //std::cout<<avr->idDerecha<<std::endl;
     //std::cout<<avr->idIzquierda<<std::endl;
     //std::cout<<avr->idPadre<<std::endl;
+    
+    return 0;
+}
+
+int main()//main disco
+{
+    /*ArbolEnDisco arbol("Arbol.bin");
+
+    std::fstream archivo("Arbol.bin", std::ios::out | std::ios::binary);
+
+    arbol.Insertar_Disco( archivo, Elemento(1, 12345678) );
+    archivo.close();
+
+    archivo.open("Arbol.bin", std::ios::out | std::ios::binary);
+    arbol.Insertar_Disco( archivo, Elemento(2, 23456789) );
+    archivo.flush();
+
+    arbol.Insertar_Disco( archivo, Elemento(3, 34567890) );
+    archivo.flush();
+    */
+
+    ArbolEnDisco arbol("Arbol.bin");
+    
+    std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
+    arbol.CrearNodo_Disco( archivo, Elemento(1, 12345678) );
+    
+    Nodo* nodo = arbol.obtenerNodo_Disco(archivo, 0);
+    std::cout<<nodo->id<<std::endl;
+    std::cout<<nodo->idDerecha<<std::endl;
+    std::cout<<nodo->idIzquierda<<std::endl;
+    std::cout<<nodo->color<<std::endl;
+
+    /*int id = 
+    if (id != -1)
+    {
+        std::cout << "El ID del DNI " << 2365 << " esta en " << id << std::endl;
+    }
+    else
+    {
+        std::cout << "No se encontro un ID del DNI " << 2365 << std::endl;
+    }*/
     
     return 0;
 }
