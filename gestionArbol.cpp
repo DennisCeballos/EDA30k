@@ -307,6 +307,7 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
     {
         return nullptr;
     }
+    encontrado->id = nodoId;
 
     return encontrado;
 }
@@ -342,7 +343,9 @@ Nodo* ArbolEnDisco::CrearNodo_Disco(std::fstream& data_stream, Elemento elemento
     
     //Guarda la posicion (id) del nodo en el mismo nodo
     //                          !Este id de nodo solo se encuentra en memoria Ram
-    nodo->id = pos;
+    nodo->id = (pos - ArbolEnDisco::inicioDataNodos) / Nodo::sizeBinario;
+        //TODO Hace falta poner una validacion? en TEORIA no debe fallar este calculo
+        // pero seria bueno agregar una validacion de que el id es un valor seguro
 
     return nodo;
 }
@@ -570,13 +573,24 @@ int main()//main disco
     ArbolEnDisco arbol("Arbol.bin");
     
     std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
-    arbol.CrearNodo_Disco( archivo, Elemento(1, 12345678) );
+    arbol.CrearNodo_Disco( archivo, Elemento(0, 12345678) );
+    arbol.CrearNodo_Disco( archivo, Elemento(1, 23456789) );
+    arbol.CrearNodo_Disco( archivo, Elemento(2, 34567890) );
     
     Nodo* nodo = arbol.obtenerNodo_Disco(archivo, 0);
-    std::cout<<nodo->id<<std::endl;
-    std::cout<<nodo->idDerecha<<std::endl;
-    std::cout<<nodo->idIzquierda<<std::endl;
-    std::cout<<nodo->color<<std::endl;
+    if (nodo == nullptr)
+    {
+        std::cout<<"No existe un nodo en esa posicion"<<std::endl;
+    }
+    else
+    {
+        std::cout<<nodo->id<<std::endl;
+        std::cout<<nodo->elemento.dni<<std::endl;
+        std::cout<<nodo->elemento.id<<std::endl;
+        std::cout<<nodo->idDerecha<<std::endl;
+        std::cout<<nodo->idIzquierda<<std::endl;
+        std::cout<<nodo->color<<std::endl;
+    }
 
     /*int id = 
     if (id != -1)
