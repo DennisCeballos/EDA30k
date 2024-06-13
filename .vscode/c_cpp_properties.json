@@ -1,18 +1,17 @@
 {
-  "configurations": [
-    {
-      "name": "windows-msvc-x64",
-      "includePath": [
-        "${workspaceFolder}/*.cpp"
-      ],
-      "compilerPath": "cl.exe",
-      "cStandard": "c11",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-msvc-x64",
-      "compilerArgs": [
-        ""
-      ]
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "windows-msvc-x64",
+            "includePath": [
+                "${workspaceFolder}/*.cpp"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "${default}",
+            "intelliSenseMode": "windows-msvc-x64",
+            "compilerArgs": [
+                ""
+            ]
+        }
+    ],
+    "version": 4
 }
