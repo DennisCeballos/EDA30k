@@ -93,6 +93,7 @@ ArbolEnDisco::ArbolEnDisco(const char* filename)
         //Si EXISTE
         // *Obtener los datos desde la cabecera
         fileIN.seekg(0, std::ios::beg);
+        std::cout<<"Tellg "<<fileIN.tellg()<<std::endl;
         fileIN.read(reinterpret_cast<char*>(&this->nroNodos),sizeof(nroNodos));
         fileIN.read(reinterpret_cast<char*>(&this->idRaiz),sizeof(idRaiz));
 
@@ -135,6 +136,7 @@ void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
         InsertarRecursivamente_Disco(data_stream, this->idRaiz, nuevoNodo->id);
         CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO);
     }
+    AjustarInsercion_Disco(data_stream, nuevoNodo->id);
 }
 
 void ArbolEnDisco::InsertarRecursivamente_Disco(std::fstream& data_stream, int idNodoActual, int idNuevoNodo)
@@ -143,13 +145,13 @@ void ArbolEnDisco::InsertarRecursivamente_Disco(std::fstream& data_stream, int i
     Nodo* nodoActual = obtenerNodo_Disco(data_stream, idNodoActual);
     Nodo* nuevoNodo = obtenerNodo_Disco(data_stream, idNuevoNodo);
 
-    if(nuevoNodo->elemento.id < nodoActual->elemento.id)
+    if(nuevoNodo->elemento.dni < nodoActual->elemento.dni)
     {
         if (nodoActual->idIzquierda == -1)
         {
             //Actualizar datos en el disco
             actualizarDatosNodo_Disco(data_stream, nodoActual->id, EditarNodo::idIzquierda, idNuevoNodo);
-            actualizarDatosNodo_Disco(data_stream, nodoActual->id, EditarNodo::idPadre, idNodoActual);
+            actualizarDatosNodo_Disco(data_stream, nuevoNodo->id, EditarNodo::idPadre, idNodoActual);
         }
         else
         {
@@ -175,8 +177,9 @@ void ArbolEnDisco::InsertarRecursivamente_Disco(std::fstream& data_stream, int i
 }
 
 void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
-{   
-    while ( true )
+{
+    bool continuarFlag = true;
+    while ( continuarFlag )
     {
         Nodo* nodo = obtenerNodo_Disco(data_stream, idNodo);
         Nodo* nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
@@ -188,7 +191,7 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
             if (nodoPadre->id == nodoPadrePadre->idIzquierda)
             {
                 Nodo* tio = obtenerNodo_Disco(data_stream, nodoPadrePadre->idDerecha);
-                if (tio != nullptr && tio->color == ROJO)
+                if (tio->id != -1 && tio->color == ROJO)
                 {
                     CambiarColor_Disco(data_stream, tio->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
@@ -210,7 +213,7 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
             else
             {
                 Nodo* tio = obtenerNodo_Disco(data_stream, nodoPadrePadre->idIzquierda);
-                if (tio != nullptr && tio->color == ROJO)
+                if (tio->id != -1 && tio->color == ROJO)
                 {
                     CambiarColor_Disco(data_stream, tio->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
@@ -231,12 +234,12 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
             }
             if (idNodo = this->idRaiz)
             {
-                break;
+                continuarFlag = false; //Esto deberia romper el while
             }
         }
         else //Parte de la conversion del raro while hacia un if
         {
-            break;
+            continuarFlag = false;
         }
     }
     CambiarColor_Disco(data_stream, this->idRaiz, NEGRO);
@@ -289,6 +292,13 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
     //Nodo que va retornarse
     Nodo* encontrado = new Nodo();
 
+    //En caso se envie un entero imposible
+    if ( nodoId < 0 )
+    {
+        encontrado->id = -1;
+        return encontrado;
+    }
+
     //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
     data_stream.seekg( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * nodoId, std::ios::beg);
 
@@ -303,11 +313,13 @@ Nodo* ArbolEnDisco::obtenerNodo_Disco(std::fstream& data_stream, int nodoId)
     data_stream.read(reinterpret_cast<char*>(&encontrado->elemento.id), sizeof(int));
     data_stream.read(reinterpret_cast<char*>(&encontrado->color), sizeof(bool));
 
+    encontrado->id = nodoId;
+
     if (encontrado->elemento.dni == -1) //Significa que en realidad es un elemento nulo
     {
-        return nullptr;
+        //Y por ende, este nodo "no existe"
+        encontrado->id = -1;
     }
-    encontrado->id = nodoId;
 
     return encontrado;
 }
@@ -412,7 +424,8 @@ void ArbolEnDisco::RotarDerecha_Disco(std::fstream &data_stream, int idNodo)
 void ArbolEnDisco::CambiarColor_Disco(std::fstream &data_stream, int idNodo, bool color)
 {
     Nodo* nodo = obtenerNodo_Disco(data_stream, idNodo);
-    if (nodo != nullptr)
+    //Verificar que el nodo que se va eliminar existe //?SE PUEDE HACER MAS EFICIENTE
+    if (nodo->id != -1)
     {
         //  METERSE AL DISCO
         //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
@@ -430,6 +443,7 @@ void ArbolEnDisco::CambiarColor_Disco(std::fstream &data_stream, int idNodo, boo
 //Recibe un arbol binario y lo almacena en disco, por defecto dejara a la raiz en la primera posicion del archivo
 void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB* arbol)
 {
+    //TODO REVISAR, ESTO PUEDE FALLAR POR ESTO DEL NULLPTR 
     if (arbol->raiz == nullptr) 
     {
         std::cout<<"Se intento guardar un arbol vacio";
@@ -497,27 +511,69 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB* arbol)
 
 void ArbolEnDisco::actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoIdModificar, EditarNodo variableEditar, int nuevoValor)
 {
-    //Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos 
+    //Moverse hasta la posicion de IDNodo (que es inicio de los datos + posicion de nodoId) 
     data_stream.seekg( ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * nodoIdModificar, std::ios::beg);
 
     switch (variableEditar)
     {
+    /*
+    ! IMPORTANTE EL ORDEN EN EL QUE SE GUARDAN AL ARCHIVO
+    ESTA *ES* LA ESTRUCTURA DE UN NODO EN BINARIO
+    file.write(reinterpret_cast<char*>(nodo->idIzquierda), sizeof(int));
+    file.write(reinterpret_cast<char*>(nodo->idDerecha), sizeof(int));
+    file.write(reinterpret_cast<char*>(nodo->idPadre), sizeof(int));
+    file.write(reinterpret_cast<char*>(nodo->elemento.dni), sizeof(int));
+    file.write(reinterpret_cast<char*>(nodo->elemento.id), sizeof(int));
+    file.write(reinterpret_cast<char*>(nodo->color), sizeof(bool));
+    */
     case EditarNodo::idDerecha:
+        //Moverse todas las posiciones hasta llegar al dato IdDERECHA
+        data_stream.seekp( sizeof(int)*1, std::ios::cur);
         
+        //Cambiar el valor de color
+        data_stream.write(reinterpret_cast<char*>(&nuevoValor), sizeof(int));
         break;
 
     case EditarNodo::idIzquierda:
+        //Moverse todas las posiciones hasta llegar al dato IdIZQUIERDA
+        //no es necesario moverse nada en este caso
         
+        //Cambiar el valor de color
+        data_stream.write(reinterpret_cast<char*>(&nuevoValor), sizeof(int));
         break;
 
     case EditarNodo::idPadre:
+        //Moverse todas las posiciones hasta llegar al dato IdDERECHA
+        data_stream.seekp( sizeof(int)*2, std::ios::cur );
         
+        //Cambiar el valor de color
+        data_stream.write(reinterpret_cast<char*>(&nuevoValor), sizeof(int));
         break;
     
     default:
-
+        std::cout<<"Se ha solicitado actualizar un dato irreconocible sobre un nodo"<<std::endl;
         break;
     }
+    data_stream.flush();
+}
+
+void imprimirNodo(Nodo* nodo)
+{
+    std::cout<<"Datos del elemento contenido "<<std::endl;
+    std::cout<<"> "<<nodo->elemento.id<<std::endl;
+    std::cout<<"> "<<nodo->elemento.dni<<std::endl;
+
+    std::cout<<"Datos sobre el nodo"<<std::endl;
+    std::cout<<"Id: \t"<<nodo->id<<std::endl;
+
+    std::cout<<"IdPadre:\t"<<nodo->idPadre<<std::endl;
+
+    std::cout<<"IdIzquierda:\t"<<nodo->idIzquierda<<std::endl;
+
+    std::cout<<"IdDerecha:\t"<<nodo->idDerecha<<std::endl;
+
+    if(nodo->color) { std::cout<<"Color ROJO"<<std::endl; }
+    else { std::cout<<"Color NEGRO"<<std::endl; }
 }
 
 
@@ -573,34 +629,31 @@ int main()//main disco
     ArbolEnDisco arbol("Arbol.bin");
     
     std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
-    arbol.CrearNodo_Disco( archivo, Elemento(0, 12345678) );
-    arbol.CrearNodo_Disco( archivo, Elemento(1, 23456789) );
-    arbol.CrearNodo_Disco( archivo, Elemento(2, 34567890) );
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 35) ); //0
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 65) ); //1
+    arbol.Insertar_Disco( archivo, Elemento( 99, 20) ); //2
     
-    Nodo* nodo = arbol.obtenerNodo_Disco(archivo, 0);
-    if (nodo == nullptr)
-    {
-        std::cout<<"No existe un nodo en esa posicion"<<std::endl;
-    }
-    else
-    {
-        std::cout<<nodo->id<<std::endl;
-        std::cout<<nodo->elemento.dni<<std::endl;
-        std::cout<<nodo->elemento.id<<std::endl;
-        std::cout<<nodo->idDerecha<<std::endl;
-        std::cout<<nodo->idIzquierda<<std::endl;
-        std::cout<<nodo->color<<std::endl;
-    }
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 58) ); //3
+    
+    //arbol.Insertar_Disco( archivo, Elemento( 25, 33) ); //4
 
-    /*int id = 
-    if (id != -1)
+    //arbol.Insertar_Disco( archivo, Elemento( 40, 21) ); //5
+    //arbol.Insertar_Disco( archivo, Elemento( 82, 18) ); //6
+    
+    Nodo* nodo;
+    for (int i = 0; i <= 5; i++)
     {
-        std::cout << "El ID del DNI " << 2365 << " esta en " << id << std::endl;
+        nodo = arbol.obtenerNodo_Disco(archivo, i);
+        if (nodo->id == -1)
+        {
+            std::cout<<"No existe un nodo en esa posicion "<<i<<std::endl;
+        }
+        else
+        {
+            imprimirNodo(nodo);
+        }
+        std::cout<<"--"<<std::endl;
     }
-    else
-    {
-        std::cout << "No se encontro un ID del DNI " << 2365 << std::endl;
-    }*/
     
     return 0;
 }
