@@ -36,6 +36,8 @@ public:
         sizeof(nroNodos) + sizeof(idRaiz)
     };
 
+    ~ArbolEnDisco();
+
     //Son las mismas operaciones del ArbolRojo pero aplicadas sobre el disco
 
     void Insertar_Disco(std::fstream& data_stream, Elemento elemento);
@@ -44,7 +46,6 @@ public:
 
     Nodo* Buscar_Disco(std::fstream* data_stream, int valor);
 
-    //TODO revisar que estas funciones sean para eliminar DNIS
     //Nodo* Eliminar_Disco(std::fstream data_stream, int valor);
     //Nodo* ObtenerSiguiente_Disco
     //void AjustarEliminacion_Disco
@@ -81,7 +82,7 @@ ArbolEnDisco::ArbolEnDisco(const char* filename)
 {
     this->nombreArchivo = filename;
     this->idRaiz = -1;
-    this->nroNodos = 0;
+    this->nroNodos = -1;
     this->arbolMemoria = new ArbolRB; //Se genera un arbol con raiz nula
 
 
@@ -93,14 +94,13 @@ ArbolEnDisco::ArbolEnDisco(const char* filename)
         //Si EXISTE
         // *Obtener los datos desde la cabecera
         fileIN.seekg(0, std::ios::beg);
-        std::cout<<"Tellg "<<fileIN.tellg()<<std::endl;
         fileIN.read(reinterpret_cast<char*>(&this->nroNodos),sizeof(nroNodos));
         fileIN.read(reinterpret_cast<char*>(&this->idRaiz),sizeof(idRaiz));
 
         // Agregar la raiz al arbol
+        //! ACA NO ESTA OBTENIENDO CORRECTAMENTE EL NODO 0
         Nodo* raiz = obtenerNodo_Disco(fileIN, this->idRaiz);
         arbolMemoria->raiz = raiz;
-
 
         //Cerrar el archivo
         fileIN.close();
@@ -123,6 +123,23 @@ ArbolEnDisco::ArbolEnDisco(const char* filename)
 
 }
 
+ArbolEnDisco::~ArbolEnDisco()
+{
+    //SI EL ARCHIVO NO EXISTE
+    //* Crea un nuevo archivo 
+    std::fstream fileOUT(this->nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
+    
+    // *Grabar la cabecera de archivo
+    fileOUT.seekp(0, std::ios::beg);
+    fileOUT.write(reinterpret_cast<char*>(&this->nroNodos), sizeof(nroNodos));
+    fileOUT.write(reinterpret_cast<char*>(&this->idRaiz), sizeof(idRaiz));
+
+    fileOUT.flush();
+    //Cerrar el archivo
+    fileOUT.close();
+    std::cout<<"Se decontruyo un Arbol"<<std::endl;
+};
+
 void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
 {
     Nodo *nuevoNodo = CrearNodo_Disco(data_stream, elemento);
@@ -134,7 +151,7 @@ void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
     else
     {
         InsertarRecursivamente_Disco(data_stream, this->idRaiz, nuevoNodo->id);
-        CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO);
+        CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO); //? Si por defecto se genera un nuevoNodo rojo, esta linea estaria de mas
     }
     AjustarInsercion_Disco(data_stream, nuevoNodo->id);
 }
@@ -204,7 +221,15 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
                     {
                         idNodo = nodoPadre->id;
                         RotarIzquierda_Disco(data_stream, idNodo);
+
+                        //Ya que se cambia el valor del idNodo (Y posteriormente son necesarios esos datos)
+                        //es necesario re-actualizar los valores de los nodoPadre y nodoPadrePadre
+                        //TODO: MEJORABLE PARA EVITAR TRABAJO SOBRE DISCO
+                        nodo = obtenerNodo_Disco(data_stream, idNodo);
+                        nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
+                        nodoPadrePadre = obtenerNodo_Disco(data_stream, nodoPadre->idPadre);
                     }
+
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
                     RotarDerecha_Disco(data_stream, nodoPadrePadre->id);
@@ -226,6 +251,12 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
                     {
                         idNodo = nodoPadre->id;
                         RotarDerecha_Disco(data_stream, idNodo);
+                        //Ya que se cambia el valor del idNodo (Y posteriormente son necesarios esos datos)
+                        //es necesario re-actualizar los valores de los nodoPadre y nodoPadrePadre
+                        //TODO: MEJORABLE PARA EVITAR TRABAJO SOBRE DISCO
+                        nodo = obtenerNodo_Disco(data_stream, idNodo);
+                        nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
+                        nodoPadrePadre = obtenerNodo_Disco(data_stream, nodoPadre->idPadre);
                     }
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
@@ -367,9 +398,8 @@ void ArbolEnDisco::RotarIzquierda_Disco(std::fstream & data_stream, int idNodo)
 {
     //Obtener el nodo por defecto del entero
     Nodo* nodo = obtenerNodo_Disco(data_stream, idNodo);
-
     Nodo* nodoDerecha = obtenerNodo_Disco(data_stream, nodo->idDerecha);
-    actualizarDatosNodo_Disco(data_stream, idNodo, EditarNodo::idDerecha, nodoDerecha->idIzquierda);
+    actualizarDatosNodo_Disco(data_stream, nodo->id, EditarNodo::idDerecha, nodoDerecha->idIzquierda);
 
     if(nodoDerecha->idIzquierda != -1)
     {
@@ -398,6 +428,7 @@ void ArbolEnDisco::RotarDerecha_Disco(std::fstream &data_stream, int idNodo)
 {
     Nodo* nodo = obtenerNodo_Disco(data_stream, idNodo);
     Nodo* nodoIzquierda = obtenerNodo_Disco(data_stream, nodo->idIzquierda);
+    actualizarDatosNodo_Disco(data_stream, nodo->id, EditarNodo::idIzquierda, nodoIzquierda->idDerecha);
 
     if(nodoIzquierda->idDerecha != -1)
     {
@@ -405,7 +436,7 @@ void ArbolEnDisco::RotarDerecha_Disco(std::fstream &data_stream, int idNodo)
     }
     actualizarDatosNodo_Disco(data_stream, nodoIzquierda->id, EditarNodo::idPadre, nodo->idPadre);
     Nodo* nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
-    if (nodo->idPadre != -1)
+    if (nodo->idPadre == -1)
     {
         this->idRaiz = nodoIzquierda->id;
     }
@@ -435,6 +466,7 @@ void ArbolEnDisco::CambiarColor_Disco(std::fstream &data_stream, int idNodo, boo
         data_stream.seekp( sizeof(int)*5, std::ios::cur);
         //Cambiar el valor de color
         data_stream.write(reinterpret_cast<char*>(&color), sizeof(bool));
+        data_stream.flush();
     }
 
 }
@@ -611,37 +643,24 @@ int mainMemoria() //main memoria
 
 int main()//main disco
 {
-    /*ArbolEnDisco arbol("Arbol.bin");
-
-    std::fstream archivo("Arbol.bin", std::ios::out | std::ios::binary);
-
-    arbol.Insertar_Disco( archivo, Elemento(1, 12345678) );
-    archivo.close();
-
-    archivo.open("Arbol.bin", std::ios::out | std::ios::binary);
-    arbol.Insertar_Disco( archivo, Elemento(2, 23456789) );
-    archivo.flush();
-
-    arbol.Insertar_Disco( archivo, Elemento(3, 34567890) );
-    archivo.flush();
-    */
-
     ArbolEnDisco arbol("Arbol.bin");
     
     std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
     //arbol.Insertar_Disco( archivo, Elemento( 99, 35) ); //0
     //arbol.Insertar_Disco( archivo, Elemento( 99, 65) ); //1
-    arbol.Insertar_Disco( archivo, Elemento( 99, 20) ); //2
-    
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 58) ); //3
-    
-    //arbol.Insertar_Disco( archivo, Elemento( 25, 33) ); //4
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 20) ); //2
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 58) ); //3 
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 33) ); //4
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 21) ); //5
 
-    //arbol.Insertar_Disco( archivo, Elemento( 40, 21) ); //5
-    //arbol.Insertar_Disco( archivo, Elemento( 82, 18) ); //6
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 18) ); //6
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 1500) ); //7
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 2000) ); //8
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 3000) ); //9
+    arbol.Insertar_Disco( archivo, Elemento( 99, 1520) ); //10
     
     Nodo* nodo;
-    for (int i = 0; i <= 5; i++)
+    for (int i = 0; i <= 10; i++)
     {
         nodo = arbol.obtenerNodo_Disco(archivo, i);
         if (nodo->id == -1)
