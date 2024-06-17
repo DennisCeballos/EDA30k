@@ -28,24 +28,27 @@ private:
     ArbolRB* arbolMemoria;
 
 public:
+    //Constructor de la clase
     ArbolEnDisco(const char* filename);
 
-    //Este es el tamano puesto que es el tamano de la cabecera
+    //Este es el tamano de la cabecera
     const static int inicioDataNodos =
     {
         sizeof(nroNodos) + sizeof(idRaiz)
     };
 
+    //Decontructor para asegurar el almacenamiento de datos
     ~ArbolEnDisco();
-
+    
+    //
     //Son las mismas operaciones del ArbolRojo pero aplicadas sobre el disco
-
+    //
     void Insertar_Disco(std::fstream& data_stream, Elemento elemento);
     void InsertarRecursivamente_Disco(std::fstream& data_stream, int idNodoActual, int idNuevoNodo);
     void AjustarInsercion_Disco(std::fstream& data_stream, int idNodo);
 
-    Nodo* Buscar_Disco(std::fstream* data_stream, int valor);
-
+    //Nodo* Buscar_Disco(std::fstream* data_stream, int valor);
+    
     //Nodo* Eliminar_Disco(std::fstream data_stream, int valor);
     //Nodo* ObtenerSiguiente_Disco
     //void AjustarEliminacion_Disco
@@ -58,21 +61,14 @@ public:
     
     void CambiarColor_Disco(std::fstream& data_stream, int idNodo, bool color);
     
-    
-    
-
-    
     int buscarPorDNI_Disco(int ciudadanoId);
     
     //
-    //Control de nodos
-    //
+    //Control de nodos en Disco
     //
     void actualizarNodoArchivo(int nodoId);
     void guardarNodosEnDisco_MASIVO(ArbolRB* arbol);
-    
     Nodo* obtenerNodo_Disco(std::fstream& data_stream, int nodoId);
-    
     void actualizarDatosNodo_Disco(std::fstream& data_stream, int nodoId, EditarNodo variableEditar, int nuevoValor);
 
 };
@@ -153,6 +149,7 @@ void ArbolEnDisco::Insertar_Disco(std::fstream& data_stream, Elemento elemento)
         InsertarRecursivamente_Disco(data_stream, this->idRaiz, nuevoNodo->id);
         CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO); //? Si por defecto se genera un nuevoNodo rojo, esta linea estaria de mas
     }
+    std::cout<<"Se inserta el nodo con dni: "<<nuevoNodo->elemento.dni<<std::endl;
     AjustarInsercion_Disco(data_stream, nuevoNodo->id);
 }
 
@@ -641,23 +638,22 @@ int mainMemoria() //main memoria
     return 0;
 }
 
-int main()//main disco
+int mainDISCO()//main disco
 {
     ArbolEnDisco arbol("Arbol.bin");
     
     std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 35) ); //0
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 65) ); //1
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 20) ); //2
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 58) ); //3 
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 33) ); //4
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 21) ); //5
-
+    //arbol.Insertar_Disco( archivo, Elemento( 99,  9) ); //0
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 33) ); //1
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 11) ); //2
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 54) ); //3 
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 72) ); //4
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 85) ); //5
     //arbol.Insertar_Disco( archivo, Elemento( 99, 18) ); //6
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 1500) ); //7
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 2000) ); //8
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 3000) ); //9
-    arbol.Insertar_Disco( archivo, Elemento( 99, 1520) ); //10
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 29) ); //7
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 43) ); //8
+    //arbol.Insertar_Disco( archivo, Elemento( 99, 51) ); //9
+    //arbol.Insertar_Disco( archivo, Elemento( 99,  2) ); //10
     
     Nodo* nodo;
     for (int i = 0; i <= 10; i++)
@@ -673,6 +669,8 @@ int main()//main disco
         }
         std::cout<<"--"<<std::endl;
     }
+    int a;
+    std::cin>>a;
     
     return 0;
 }

@@ -55,7 +55,7 @@ class CtrlCiudadano
             //Cerrar el archivo por seguridad
             myfile.close();
 
-            if (debug) { cout<<"Guardado correctamente al ciudadano "<<ciudadano->datos[0,10]<<" en pos "<<pos<<endl; }
+            if (debug) { cout<<"Guardado correctamente al ciudadano "<<ciudadano->datos<<" en pos "<<pos<<endl; }
             this->nroElementos += 1;
             return pos;
         }
@@ -153,14 +153,15 @@ class CtrlCiudadano
 //*SERIA BUENO QUE ESTO ESTE EN OTRA CLASE
 //*SERIA BUENO QUE ESTO ESTE EN OTRA CLASE
 
-int otrootro()
+int main()
 {
-    const char* archivo = "datos.bin";
+    
+    const char* archivo = "datosCiudadanos.bin";
     CtrlCiudadano ctrlCiudadano(archivo);
 
     Ciudadano* pepe = new Ciudadano(
         12345678,
-        "Pepe, Peruano, Ica, Su casa, 123456789, unGmail, soltero si eres mujer"
+        "Pepe, Peruano, Ica, Su casa, 123456789, unGmail, soltero"
     );
 
     Ciudadano* juan = new Ciudadano(
@@ -168,19 +169,19 @@ int otrootro()
     );
 
     Ciudadano* promedio = new Ciudadano(
-        66677700, "promedio, peruana, Callao, Casa cualquiera, 111555999, nica, Viudo"
+        66677700, "promedio, peruana, Callao, Casa cualquiera, 111555999, unHotmail, Viudo"
     );
     
     int sitio = -1;
-    sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
-    cout<<">>"<<sitio<<endl;
+    //sitio = ctrlCiudadano.guardarCiudadano(pepe, true);
+    //cout<<">>"<<sitio<<endl;
+    //
+    //sitio = ctrlCiudadano.guardarCiudadano(juan, true);
+    //cout<<">>"<<sitio<<endl;
+    //
+    //sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
+    //cout<<">>"<<sitio<<endl;
     
-    sitio = ctrlCiudadano.guardarCiudadano(juan, true);
-    cout<<">>"<<sitio<<endl;
-    
-    sitio = ctrlCiudadano.guardarCiudadano(promedio, true);
-    cout<<">>"<<sitio<<endl;
-
     //clock_t start = clock();
     //
     ////! OBJETIVO 33 000 000
@@ -196,10 +197,14 @@ int otrootro()
     //double tiempo_transcurrido = (double)(end - start) / CLOCKS_PER_SEC;
     //cout<<"Tiempo de ejecucion: "<<tiempo_transcurrido<<" segundos"<<endl;
 
+    //CtrlCiudadano ctrlCiudadano("datos.bin");
     cout<<"Datos extraidos:"<<endl;
     Ciudadano* fin = ctrlCiudadano.obtenerCiudadanoEnPos(2, true);
     cout<<fin->getDni()<<endl;
     cout<<fin->getDatos()<<endl;
+
+    int a;
+    std::cin>>a;
 
     return 0;
 }
