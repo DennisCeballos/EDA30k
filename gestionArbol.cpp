@@ -260,7 +260,7 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream& data_stream, int idNodo)
                     RotarIzquierda_Disco(data_stream, nodoPadrePadre->id);
                 }
             }
-            if (idNodo = this->idRaiz)
+            if (idNodo == this->idRaiz)
             {
                 continuarFlag = false; //Esto deberia romper el while
             }
@@ -638,20 +638,22 @@ int mainMemoria() //main memoria
     return 0;
 }
 
-int mainDISCO()//main disco
+int main()//main disco
 {
     ArbolEnDisco arbol("Arbol.bin");
     
     std::fstream archivo("Arbol.bin", std::ios::in | std::ios::out | std::ios::binary);
-    //arbol.Insertar_Disco( archivo, Elemento( 99,  9) ); //0
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 33) ); //1
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 11) ); //2
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 54) ); //3 
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 72) ); //4
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 85) ); //5
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 18) ); //6
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 29) ); //7
-    //arbol.Insertar_Disco( archivo, Elemento( 99, 43) ); //8
+    arbol.Insertar_Disco( archivo, Elemento( 99,  9) ); //0
+    arbol.Insertar_Disco( archivo, Elemento( 99, 33) ); //1
+    arbol.Insertar_Disco( archivo, Elemento( 99, 11) ); //2
+    arbol.Insertar_Disco( archivo, Elemento( 99, 54) ); //3 
+    arbol.Insertar_Disco( archivo, Elemento( 99, 72) ); //4
+    arbol.Insertar_Disco( archivo, Elemento( 99, 85) ); //5
+    arbol.Insertar_Disco( archivo, Elemento( 99, 18) ); //6
+    arbol.Insertar_Disco( archivo, Elemento( 99, 29) ); //7
+
+    arbol.Insertar_Disco( archivo, Elemento( 99, 43) ); //8
+    
     //arbol.Insertar_Disco( archivo, Elemento( 99, 51) ); //9
     //arbol.Insertar_Disco( archivo, Elemento( 99,  2) ); //10
     
@@ -669,8 +671,6 @@ int mainDISCO()//main disco
         }
         std::cout<<"--"<<std::endl;
     }
-    int a;
-    std::cin>>a;
     
     return 0;
 }

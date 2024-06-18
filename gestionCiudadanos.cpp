@@ -153,7 +153,7 @@ class CtrlCiudadano
 //*SERIA BUENO QUE ESTO ESTE EN OTRA CLASE
 //*SERIA BUENO QUE ESTO ESTE EN OTRA CLASE
 
-int main()
+int mainCiudadano()
 {
     
     const char* archivo = "datosCiudadanos.bin";
