@@ -65,7 +65,6 @@ void InsertarRecursivamente (Nodo *nodoActual, Nodo *nuevoNodo);
 void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 
 Nodo *Buscar                (ArbolRB *arbol, int valor);
-
 Nodo *Eliminar              (ArbolRB *arbol, int valor);
 Nodo *ObtenerSiguiente      (Nodo *nodo);
 void AjustarEliminacion     (ArbolRB *arbol, Nodo *nodo);
