@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <queue>
 #include <cstring>
 #include <string>
 #include <queue>
@@ -21,13 +22,14 @@ enum EditarNodo
 
 class ArbolEnDisco
 {
-private:
+public:
     int nroNodos{0};
     int idRaiz{-1};
     std::string nombreArchivo;
     ArbolRB *arbolMemoria;
+    std::priority_queue<int, std::vector<int>, std::greater<int> >  espaciosLibre;
 
-public:
+    //Funciones de la clase
     // Constructor de la clase
     ArbolEnDisco(const char *filename);
 
@@ -301,8 +303,18 @@ Nodo *ArbolEnDisco::CrearNodo_Disco(std::fstream &data_stream, Elemento elemento
     // Crear el nodo que se va almacenar
     Nodo *nodo = new Nodo(elemento);
 
-    // Moverse al final del archivo
-    data_stream.seekp(0, std::ios::end);
+    // Checar si hay un espacio disponible en el vector
+    if ( this->espaciosLibre.size() > 0 )
+    {
+        data_stream.seekp( this->espaciosLibre.top(), std::ios::beg );
+        this->espaciosLibre.pop();
+    }
+    else
+    {
+        // Moverse al final del archivo
+        data_stream.seekp(0, std::ios::end);
+    }
+
 
     // Guardar posicion en el archivo
     int pos = data_stream.tellp();
@@ -640,7 +652,7 @@ int main() // main disco
     arbol.Insertar_Disco(archivo, Elemento(99, 54)); // 3
     arbol.Insertar_Disco(archivo, Elemento(99, 72)); // 4
     arbol.Insertar_Disco(archivo, Elemento(99, 85)); // 5
-    arbol.Insertar_Disco(archivo, Elemento(99, 18)); // 6
+    arbol.Insertar_Disco(archivo, Elemento(98, 18)); // 6
     arbol.Insertar_Disco(archivo, Elemento(99, 29)); // 7
 
     arbol.Insertar_Disco(archivo, Elemento(99, 43)); // 8
@@ -662,6 +674,9 @@ int main() // main disco
         }
         std::cout << "--" << std::endl;
     }
+    Nodo* pru = arbol.Buscar_Disco(archivo, 18);
+    std::cout<<pru->elemento.id<<std::endl;
+    std::cout<<"Hay "<<arbol.nroNodos<<" nodos"<<std::endl;
 
     return 0;
 }
