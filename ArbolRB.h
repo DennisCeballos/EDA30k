@@ -79,6 +79,4 @@ void CambiarColor           (Nodo *nodo, bool color);
 
 void PrintColor             (Nodo *nodo);
 
-int BuscarPorDni            (ArbolRB *arbol, int dni);
-
 #endif //ARBOLRB_H

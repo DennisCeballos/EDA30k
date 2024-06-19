@@ -62,8 +62,6 @@ public:
 
     void CambiarColor_Disco(std::fstream &data_stream, int idNodo, bool color);
 
-    int buscarPorDNI_Disco(std::fstream &data_stream, int ciudadanoDni);
-
     //
     // Control de nodos en Disco
     //
@@ -415,16 +413,6 @@ void ArbolEnDisco::CambiarColor_Disco(std::fstream &data_stream, int idNodo, boo
     }
 }
 
-//Retorna un nodo buscando por DNI
-int ArbolEnDisco::buscarPorDNI_Disco(std::fstream &data_stream, int ciudadanoDni)
-{
-    Nodo *nodoActual = obtenerNodo_Disco(data_stream, this->idRaiz);
-    //
-    // Algo me dice que esta funcion esta de mas.....
-    //
-    return 0;
-}
-
 // Funcion para obtener un nodo (desde el stream dado) segun su id en el archivo
 // de ser un nodo nulo (o sea el dni del elemento es -1), se retorna nullptr
 Nodo *ArbolEnDisco::obtenerNodo_Disco(std::fstream &data_stream, int nodoId)
@@ -617,10 +605,10 @@ int mainMemoria() // main memoria
     Insertar(&arbol, Elemento(2, 23456789));
     Insertar(&arbol, Elemento(3, 34567890));
 
-    int id = BuscarPorDni(&arbol, 34567890);
-    if (id != -1)
+    Nodo* encontrado = Buscar(&arbol, 34567890);
+    if (encontrado->id != -1)
     {
-        std::cout << "El ID del DNI " << 2365 << " esta en " << id << std::endl;
+        std::cout << "El ID del DNI " << 2365 << " esta en " << encontrado->id << std::endl;
     }
     else
     {

@@ -21,7 +21,7 @@ void Insertar(ArbolRB *arbol, Elemento elem)
 
 void InsertarRecursivamente(Nodo *nodoActual, Nodo *nuevoNodo)
 {
-    if (nuevoNodo->elemento.id < nodoActual->elemento.id)
+    if (nuevoNodo->elemento.dni < nodoActual->elemento.dni)
     {
         if (nodoActual->izquierda == nullptr)
         {
@@ -104,13 +104,13 @@ void AjustarInsercion(ArbolRB *arbol, Nodo *nodo)
     CambiarColor(arbol->raiz, NEGRO);
 }
 
-//Funcion para buscar un valor a lo largo del arbol que se entregue
-Nodo *Buscar(ArbolRB *arbol, int valor)
+//Funcion para buscar un nodo por DNI
+Nodo *Buscar(ArbolRB *arbol, int dni)
 {
     Nodo *nodoActual = arbol->raiz;
-    while (nodoActual != nullptr && nodoActual->elemento.id != valor)
+    while (nodoActual != nullptr && nodoActual->elemento.id != dni)
     {
-        if (valor < nodoActual->elemento.id)
+        if (dni < nodoActual->elemento.id)
         {
             nodoActual = nodoActual->izquierda;
         }
@@ -122,11 +122,11 @@ Nodo *Buscar(ArbolRB *arbol, int valor)
     return nodoActual;
 }
 
-Nodo *Eliminar(ArbolRB *arbol, int valor)
+Nodo *Eliminar(ArbolRB *arbol, int dni)
 {
     Nodo *nodoReemplazo = nullptr;
     Nodo *hijoReemplazo = nullptr;
-    Nodo *nodoAEliminar = Buscar(arbol, valor);
+    Nodo *nodoAEliminar = Buscar(arbol, dni);
     if (nodoAEliminar == nullptr)
     {
         return nullptr;
@@ -185,7 +185,7 @@ Nodo *Eliminar(ArbolRB *arbol, int valor)
     return nodoAEliminar;
 }
 
-//Retorna el nodo que se encuentre a la (derecha+izquierda*) del nodo encontrado (no entendi para que sirve lol)
+//Retorna el nodo que tiene el segundo valor mas alto del arbol para mantenerlo ordenado -> "sucesor in-order"
 Nodo *ObtenerSiguiente(Nodo *nodo)
 {
     Nodo *actual = nodo->derecha;
@@ -354,25 +354,4 @@ void PrintColor(Nodo *nodo)
             std::cout << "Negro";
         }
     }
-}
-
-int BuscarPorDni(ArbolRB *arbol, int dni)
-{
-    Nodo *nodoActual = arbol->raiz;
-    while (nodoActual != nullptr)
-    {
-        if (nodoActual->elemento.dni == dni)
-        {
-            return nodoActual->elemento.id;
-        }
-        if (dni < nodoActual->elemento.dni)
-        {
-            nodoActual = nodoActual->izquierda;
-        }
-        else
-        {
-            nodoActual = nodoActual->derecha;
-        }
-    }
-    return -1; // Indica que no se encontró el dni
 }
