@@ -17,7 +17,7 @@ public:
 struct Nodo
 {
     Elemento elemento {-1, -1};
-    bool color {ROJO};
+    bool color {NEGRO};
     int id {-1};
 
     Nodo *izquierda { nullptr };
