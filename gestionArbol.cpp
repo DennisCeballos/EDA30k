@@ -917,14 +917,11 @@ int main() // main memoria
     Insertar(&arbol, Elemento(99, 85));
 
     Eliminar(&arbol, 9);
-
-    //Nodo* otro = Buscar(&arbol, 72);
-    //std::cout<<ObtenerSiguiente( otro )->elemento.dni<<std::endl;
     Eliminar(&arbol, 72);
 
-    Insertar(&arbol, Elemento(99, 20));
-    Insertar(&arbol, Elemento(99, 59));
-    Eliminar(&arbol, 11);
+    //Insertar(&arbol, Elemento(99, 20));
+    //Insertar(&arbol, Elemento(99, 59));
+    //Eliminar(&arbol, 11);
     
     inOrderTraversal(arbol.raiz);
     std::cout<<std::endl;
