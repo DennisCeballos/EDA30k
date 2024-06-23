@@ -27,7 +27,7 @@ public:
     int idRaiz{-1};
     std::string nombreArchivo;
     ArbolRB *arbolMemoria;
-    std::priority_queue<int, std::vector<int>, std::greater<int>> espaciosLibre;
+    std::priority_queue<int, std::vector<int>, std::greater<int>> espaciosLibre; //Un minheap para almacenar las eliminaciones
 
     // Funciones de la clase
     //  Constructor de la clase
@@ -53,7 +53,7 @@ public:
     Nodo *Eliminar_Disco(std::fstream &data_stream, int valor);
     Nodo *ObtenerSiguiente_Disco(std::fstream &data_stream, int idNodo);
     void AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo);
-    // bool ColorDeNodo
+
 
     Nodo *CrearNodo_Disco(std::fstream &data_stream, Elemento elemento);
 
@@ -67,8 +67,13 @@ public:
     //
     Nodo *obtenerNodo_Disco(std::fstream &data_stream, int nodoId);
     void actualizarDatosNodo_Disco(std::fstream &data_stream, int nodoId, EditarNodo variableEditar, int nuevoValor);
+    void EliminarNodo_Disco(std::fstream &data_stream, int nodoId);
+    
 
+    // Funciones adicionales
     void guardarNodosEnDisco_MASIVO(ArbolRB *arbol);
+
+    void recorridoInOrder(std::fstream &data_stream, int nodoRaiz);
 };
 
 // Constructor de la clase
@@ -76,7 +81,7 @@ ArbolEnDisco::ArbolEnDisco(const char *filename)
 {
     this->nombreArchivo = filename;
     this->idRaiz = -1;
-    this->nroNodos = -1;
+    this->nroNodos = 0;
     this->arbolMemoria = new ArbolRB; // Se genera un arbol con raiz nula
 
     std::fstream fileIN(filename, std::ios::in | std::ios::binary);
@@ -94,6 +99,22 @@ ArbolEnDisco::ArbolEnDisco(const char *filename)
         //! ACA NO ESTA OBTENIENDO CORRECTAMENTE EL NODO 0
         Nodo *raiz = obtenerNodo_Disco(fileIN, this->idRaiz);
         arbolMemoria->raiz = raiz;
+
+        // *Obtener los valores de los espacios eliminados
+        // Moverse hasta la ultima posicion del ultimo nodo
+        fileIN.seekg(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * this->nroNodos, std::ios::beg);
+
+        //Leer el numero de espacios libres
+        int numEspacios = 0;
+        fileIN.read(reinterpret_cast<char *>(&numEspacios), sizeof(int));
+
+        //Leer el "numEspacios" e insertarlos en el minHeap
+        int valor = 0;
+        for (int i = 0; i < numEspacios; i++)
+        {
+            fileIN.read(reinterpret_cast<char *>(&valor), sizeof(int));
+            this->espaciosLibre.push(valor);
+        }
 
         // Cerrar el archivo
         fileIN.close();
@@ -117,7 +138,6 @@ ArbolEnDisco::ArbolEnDisco(const char *filename)
 
 ArbolEnDisco::~ArbolEnDisco()
 {
-    // SI EL ARCHIVO NO EXISTE
     //* Crea un nuevo archivo
     std::fstream fileOUT(this->nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
 
@@ -128,6 +148,31 @@ ArbolEnDisco::~ArbolEnDisco()
 
     fileOUT.flush();
 
+    // *Grabar el pie de pagina del archivo
+    //Moverse hasta el final de la posicion del ultimo nodo
+    fileOUT.seekp(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * (this->nroNodos+1), std::ios::beg); //? Podria reemplazarse por seekp(0, std::ios::end)?
+    int numEspacios = this->espaciosLibre.size();
+    fileOUT.write(reinterpret_cast<char *>(&numEspacios), sizeof(int));
+
+    //Si solo existe mas de un valor
+    if (numEspacios > 0)
+    {
+        //Almacenar cada valor interior en disco
+    }
+    
+    //Almacenar cada valor interior en disco
+    int valorGuardar = 0;
+    while (!espaciosLibre.empty())
+    {
+        //Obtener el valor mas alto
+        valorGuardar = this->espaciosLibre.top();
+        //Eliminar el valor mas alto
+        espaciosLibre.pop();
+
+        //Almacenar el valor en disco
+        fileOUT.write(reinterpret_cast<char *>(&valorGuardar), sizeof(int));
+    }
+
     // Cerrar el archivo
     fileOUT.close();
     std::cout << "- Se decontruyo un Arbol" << std::endl;
@@ -136,6 +181,9 @@ ArbolEnDisco::~ArbolEnDisco()
 void ArbolEnDisco::Insertar_Disco(std::fstream &data_stream, Elemento elemento)
 {
     Nodo *nuevoNodo = CrearNodo_Disco(data_stream, elemento);
+    
+    
+    
     if (this->idRaiz == -1)
     {
         this->idRaiz = nuevoNodo->id;
@@ -344,19 +392,18 @@ Nodo *ArbolEnDisco::Eliminar_Disco(std::fstream &data_stream, int dni)
         }
     }
 
-    if (nodoReemplazo->id != nodoAEliminar->id) //? por que esta este?
+    if (nodoReemplazo->id != nodoAEliminar->id)
     {
         nodoAEliminar->elemento = nodoReemplazo->elemento;
     }
 
     if (nodoReemplazo->color == NEGRO)
     {
-        AjustarEliminacion_Disco(data_stream, hijoReemplazo->id);
+        AjustarEliminacion_Disco(data_stream, nodoAEliminar->id);
     }
 
-    //SOLO POR RAZONES LOGICAS Y DE SAFE-GUARDADO
-    //Eliminar la relacion con el padre de nodoAEliminar
-    actualizarDatosNodo_Disco(data_stream, nodoAEliminar->id, EditarNodo::idPadre, -1);
+    //Funcion para "ELIMINAR" un nodo del archivo
+    EliminarNodo_Disco(data_stream, nodoAEliminar->id);
     return nodoAEliminar;
 }
 
@@ -483,13 +530,16 @@ Nodo *ArbolEnDisco::CrearNodo_Disco(std::fstream &data_stream, Elemento elemento
     // Checar si hay un espacio disponible en el vector
     if (this->espaciosLibre.size() > 0)
     {
-        data_stream.seekp(this->espaciosLibre.top(), std::ios::beg);
+        //Asignar la posicion segun el id disponible (el minHeap contiene los id's Disponibles)
+        data_stream.seekp(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * this->espaciosLibre.top(), std::ios::beg);
+        
+        //Eliminar la primera posicion disponible
         this->espaciosLibre.pop();
     }
     else
     {
-        // Moverse al final del archivo
-        data_stream.seekp(0, std::ios::end);
+        // Moverse al final de la posicion de nodos en el archivo 
+        data_stream.seekp(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * this->nroNodos , std::ios::beg);
     }
 
     // Guardar posicion en el archivo
@@ -505,6 +555,7 @@ Nodo *ArbolEnDisco::CrearNodo_Disco(std::fstream &data_stream, Elemento elemento
     data_stream.write(reinterpret_cast<char *>(&nodo->color), sizeof(bool));
     data_stream.flush();
 
+    //Aumentar el nro de Nodos del arbol
     this->nroNodos += 1;
 
     // Guarda la posicion (id) del nodo en el mismo nodo
@@ -678,6 +729,45 @@ void ArbolEnDisco::actualizarDatosNodo_Disco(std::fstream &data_stream, int nodo
     data_stream.flush();
 }
 
+//Funcion para "Eliminar" un nodo del disco
+// se refiere a habilitar el espacio dentro del minHeap o liberar la memoria de ser necesario
+void ArbolEnDisco::EliminarNodo_Disco(std::fstream &data_stream, int idNodo)
+{
+    
+    //Revisar si el nodo eliminado es el ultimo
+    if(idNodo == this->nroNodos-1)
+    {
+        //De ser el ultimo
+        //Moverse hasta la posicion del ultimoNodo
+        // Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos
+        data_stream.seekg(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * idNodo, std::ios::beg);
+    
+        //Escribir cadena de 0's (equivalente a eliminar al escribir un arcivo)
+        char zeros[Nodo::sizeBinario] = {0};
+        data_stream.write(zeros, Nodo::sizeBinario);
+        data_stream.flush();
+
+        //Disminuir el nro de nodos del arbol
+        this->nroNodos = this->nroNodos-1;
+
+    }
+    else
+    {
+        //De no ser el ultimo que se elimina
+
+        //(SOLO POR RAZONES LOGICAS Y DE SAFE-GUARDADO)
+        //Eliminar la relacion con el padre del nodo a eliminar
+        actualizarDatosNodo_Disco(data_stream, idNodo, EditarNodo::idPadre, -2);
+
+        //Luego agregar esta posicion al minHeap
+        this->espaciosLibre.push(idNodo);
+
+        //Y disminuir el numero de nodos del arbol
+        this->nroNodos = this->nroNodos-1;
+    }
+
+}
+
 // Recibe un arbol binario y lo almacena en disco, por defecto dejara a la raiz en la primera posicion del archivo
 void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
 {
@@ -748,6 +838,24 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
     file.close();
 }
 
+void ArbolEnDisco::recorridoInOrder(std::fstream &data_stream, int idNodo)
+{
+    if (idNodo < 0) {
+        return;
+    }
+    
+    Nodo* nodoActual = obtenerNodo_Disco(data_stream, idNodo);
+
+    // Traverse left subtree
+    this->recorridoInOrder(data_stream, nodoActual->idIzquierda);
+
+    // Print current node value
+    std::cout << nodoActual->elemento.dni << " ";
+
+    // Traverse right subtree
+    this->recorridoInOrder(data_stream, nodoActual->idDerecha);
+}
+
 // ---- Fin de clase ----
 
 void imprimirNodo(Nodo *nodo)
@@ -775,39 +883,65 @@ void imprimirNodo(Nodo *nodo)
     }
 }
 
-int mainMemoria() // main memoria
+
+//Funcion para verificar rapidamente el funcionamiento del arbol 
+void inOrderTraversal(Nodo* nodo)
+{
+    if (nodo == nullptr) {
+        return;
+    }
+
+    // Traverse left subtree
+    inOrderTraversal(nodo->izquierda);
+
+    // Print current node value
+    if (nodo->elemento.dni != -1)
+    {
+        std::string color = (nodo->color)? "R" : "N";
+        std::cout << color <<nodo->elemento.dni << " ";
+    }
+
+    // Traverse right subtree
+    inOrderTraversal(nodo->derecha);
+}
+
+int main() // main memoria
 {
     ArbolRB arbol;
     // Insercion del id y dni
-    Insertar(&arbol, Elemento(1, 12345678));
-    Insertar(&arbol, Elemento(2, 23456789));
-    Insertar(&arbol, Elemento(3, 34567890));
+    Insertar(&arbol, Elemento(99, 9));
+    Insertar(&arbol, Elemento(99, 33));
+    Insertar(&arbol, Elemento(99, 11));
+    Insertar(&arbol, Elemento(99, 54));
+    Insertar(&arbol, Elemento(99, 72));
+    Insertar(&arbol, Elemento(99, 85));
 
-    Nodo *encontrado = Buscar(&arbol, 34567890);
-    if (encontrado->id != -1)
+    Eliminar(&arbol, 9);
+
+    //Nodo* otro = Buscar(&arbol, 72);
+    //std::cout<<ObtenerSiguiente( otro )->elemento.dni<<std::endl;
+    Eliminar(&arbol, 72);
+
+    Insertar(&arbol, Elemento(99, 20));
+    Insertar(&arbol, Elemento(99, 59));
+    Eliminar(&arbol, 11);
+    
+    inOrderTraversal(arbol.raiz);
+    std::cout<<std::endl;
+
+    Nodo *encontrado = Buscar(&arbol, 1);
+    if (encontrado != nullptr)
     {
-        std::cout << "El ID del DNI " << 2365 << " esta en " << encontrado->id << std::endl;
+        std::cout << "El ID del DNI " << 1 << " esta en " << encontrado->elemento.dni << std::endl;
     }
     else
     {
-        std::cout << "No se encontro un ID del DNI " << 2365 << std::endl;
+        std::cout << "No se encontro un ID del DNI " << 85 << std::endl;
     }
-
-    // ArbolEnDisco guardado("Arbol.bin");
-    // guardado.guardarNodosEnDisco_MASIVO(&arbol);
-    //
-    //
-    // Nodo* avr = guardado.buscarNodoEnArchivo(0);
-    // std::cout<<avr->elemento.dni<<std::endl;
-    // std::cout<<avr->elemento.id<<std::endl;
-    // std::cout<<avr->idDerecha<<std::endl;
-    // std::cout<<avr->idIzquierda<<std::endl;
-    // std::cout<<avr->idPadre<<std::endl;
-
     return 0;
 }
 
-int main() // main disco
+int mainDisco() // main disco
 {
     ArbolEnDisco arbol("Arbol.bin");
 
@@ -819,16 +953,27 @@ int main() // main disco
     arbol.Insertar_Disco(archivo, Elemento(99, 72)); // 4
     arbol.Insertar_Disco(archivo, Elemento(99, 85)); // 5
     
+
+    arbol.Eliminar_Disco(archivo, 72);
+    arbol.Eliminar_Disco(archivo, 54);
+
     /*
-    arbol.Insertar_Disco(archivo, Elemento(98, 18)); // 6
-    arbol.Insertar_Disco(archivo, Elemento(99, 29)); // 7
-    arbol.Insertar_Disco(archivo, Elemento(99, 43)); // 8
-    arbol.Insertar_Disco(archivo, Elemento(99, 51)); // 9
-    arbol.Insertar_Disco(archivo, Elemento(99, 2));  // 10
+    Insertar(&arbol, Elemento(99, 9));
+    Insertar(&arbol, Elemento(99, 33));
+    Insertar(&arbol, Elemento(99, 11));
+    Insertar(&arbol, Elemento(99, 54));
+    Insertar(&arbol, Elemento(99, 72));
+    Insertar(&arbol, Elemento(99, 85));
+
+    Eliminar(&arbol, 54);
+    Eliminar(&arbol, 72);
+
+    Insertar(&arbol, Elemento(99, 59));
+    Insertar(&arbol, Elemento(99, 20));
+    Insertar(&arbol, Elemento(99, 20));
+    Eliminar(&arbol, 11);
     */
-
-    arbol.Eliminar_Disco(archivo, 85);
-
+   
     Nodo *nodo;
     for (int i = 0; i <= 10; i++)
     {
@@ -843,8 +988,18 @@ int main() // main disco
         }
         std::cout << "--" << std::endl;
     }
-    Nodo *pru = arbol.Buscar_Disco(archivo, 33);
-    std::cout << "Se busco el nodo con DNI 18: " << std::endl;
+    if (archivo.fail())
+    {
+        archivo.clear();
+        archivo.seekg(0, std::ios::beg);
+        archivo.seekp(0, std::ios::beg);
+    }
+
+    arbol.recorridoInOrder(archivo, arbol.idRaiz);
+    std::cout<<std::endl;
+
+    Nodo *pru = arbol.Buscar_Disco(archivo, 72);
+    std::cout << "Se busco el nodo con DNI 72: " << std::endl;
     std::cout << pru->elemento.id << std::endl;
     std::cout << "Hay " << arbol.nroNodos << " nodos" << std::endl;
 

@@ -56,8 +56,17 @@ struct Nodo
 struct ArbolRB
 {
     Nodo *raiz;
+    Nodo *TNULL;
 
-    ArbolRB() : raiz(nullptr) {}
+    ArbolRB()
+    {
+        TNULL = new Nodo();
+        TNULL->color = NEGRO;
+        TNULL->izquierda = nullptr;
+        TNULL->derecha = nullptr;
+
+        raiz = TNULL;
+    }
 };
 
 void Insertar               (ArbolRB *arbol, Elemento elem);
@@ -65,12 +74,18 @@ void InsertarRecursivamente (Nodo *nodoActual, Nodo *nuevoNodo);
 void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 
 Nodo *Buscar                (ArbolRB *arbol, int valor);
-Nodo *Eliminar              (ArbolRB *arbol, int valor);
+
+void Eliminar               (ArbolRB *arbol, int valor);
 Nodo *ObtenerSiguiente      (Nodo *nodo);
 void AjustarEliminacion     (ArbolRB *arbol, Nodo *nodo);
-bool ColorDeNodo            (Nodo *nodo);
+//Nuevos
+void rbTransplant           (ArbolRB *arbol, Nodo *nodoU, Nodo *nodoV);
+Nodo *minimum               (Nodo *nodo);
+Nodo *maximum               (Nodo *nodo);
+//Nuevos
 
-Nodo *CrearNodo             (Elemento elem);
+
+Nodo *CrearNodo             (ArbolRB *arbol, Elemento elem);
 
 void RotarIzquierda         (ArbolRB *arbol, Nodo *nodo);
 void RotarDerecha           (ArbolRB *arbol, Nodo *nodo);
@@ -78,5 +93,6 @@ void RotarDerecha           (ArbolRB *arbol, Nodo *nodo);
 void CambiarColor           (Nodo *nodo, bool color);
 
 void PrintColor             (Nodo *nodo);
+
 
 #endif //ARBOLRB_H
