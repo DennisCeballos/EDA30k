@@ -70,7 +70,6 @@ struct ArbolRB
 };
 
 void Insertar               (ArbolRB *arbol, Elemento elem);
-void InsertarRecursivamente (Nodo *nodoActual, Nodo *nuevoNodo);
 void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 
 Nodo *Buscar                (ArbolRB *arbol, int valor);

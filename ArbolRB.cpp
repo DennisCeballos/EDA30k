@@ -57,34 +57,6 @@ void Insertar(ArbolRB *arbol, Elemento elem)
     AjustarInsercion(arbol, nodo);
 }
 
-void InsertarRecursivamente(Nodo *nodoActual, Nodo *nuevoNodo)
-{
-    if (nuevoNodo->elemento.dni < nodoActual->elemento.dni)
-    {
-        if (nodoActual->izquierda == nullptr)
-        {
-            nodoActual->izquierda = nuevoNodo;
-            nuevoNodo->padre = nodoActual;
-        }
-        else
-        {
-            InsertarRecursivamente(nodoActual->izquierda, nuevoNodo);
-        }
-    }
-    else
-    {
-        if (nodoActual->derecha == nullptr)
-        {
-            nodoActual->derecha = nuevoNodo;
-            nuevoNodo->padre = nodoActual;
-        }
-        else
-        {
-            InsertarRecursivamente(nodoActual->derecha, nuevoNodo);
-        }
-    }
-}
-
 // Funcion para ajustar el arbol luego de una insercion
 void AjustarInsercion(ArbolRB *arbol, Nodo *nodo)
 {

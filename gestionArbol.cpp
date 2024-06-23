@@ -29,6 +29,12 @@ public:
     ArbolRB *arbolMemoria;
     std::priority_queue<int, std::vector<int>, std::greater<int>> espaciosLibre; //Un minheap para almacenar las eliminaciones
 
+    //ACLARACION DE CONVERSION
+    // Este arbol no requiere de un "TNULL" como tal,
+    // el manejo de nodo parcialmente en memoria hace que ya se generen
+    // unos TNULL "virtuales". Por lo cual no es necesario generar
+    // un nodo que represente un TNULL (contrario al arbol en memoria)
+
     // Funciones de la clase
     //  Constructor de la clase
     ArbolEnDisco(const char *filename);
@@ -53,6 +59,10 @@ public:
     Nodo *Eliminar_Disco(std::fstream &data_stream, int valor);
     Nodo *ObtenerSiguiente_Disco(std::fstream &data_stream, int idNodo);
     void AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo);
+    //Nuevos
+    void rbTransplant_Disco(std::fstream &data_stream, int idNodoU, int idNodoV);
+    Nodo* minimum_Disco(std::fstream &data_stream, int idNodo);
+    Nodo* maximum_Disco(std::fstream &data_stream, int idNodo);
 
 
     Nodo *CrearNodo_Disco(std::fstream &data_stream, Elemento elemento);
@@ -182,7 +192,8 @@ void ArbolEnDisco::Insertar_Disco(std::fstream &data_stream, Elemento elemento)
 {
     Nodo *nuevoNodo = CrearNodo_Disco(data_stream, elemento);
     
-    
+    Nodo* y = nullptr;
+    Nodo* x = obtenerNodo_Disco(data_stream, this->idRaiz);
     
     if (this->idRaiz == -1)
     {
@@ -526,6 +537,11 @@ Nodo *ArbolEnDisco::CrearNodo_Disco(std::fstream &data_stream, Elemento elemento
 
     // Crear el nodo que se va almacenar
     Nodo *nodo = new Nodo(elemento);
+    //Replicando el comportamiento de un "TNULL"
+    nodo->idPadre = -1;
+    nodo->idIzquierda = -1;
+    nodo->idDerecha = -1;
+    nodo->color = ROJO;
 
     // Checar si hay un espacio disponible en el vector
     if (this->espaciosLibre.size() > 0)
