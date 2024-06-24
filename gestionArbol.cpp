@@ -8,81 +8,11 @@
 #include <cmath>
 
 #include "ArbolRB.h"
+#include "gestionArbol.h"
 // En este archivo se definen las clases importantes del proyecto
 //  - Elemento de Nodos
 //  - Nodos
 //  - ArbolRB
-
-enum EditarNodo
-{
-    idIzquierda,
-    idDerecha,
-    idPadre,
-};
-
-class ArbolEnDisco
-{
-public:
-    int nroNodos{0};
-    int idRaiz{-1};
-    std::string nombreArchivo;
-    ArbolRB *arbolMemoria;
-    std::priority_queue<int, std::vector<int>, std::greater<int>> espaciosLibre; //Un minheap para almacenar las eliminaciones
-
-    //ACLARACION DE CONVERSION
-    // Este arbol no requiere de un "TNULL" como tal,
-    // el manejo de nodo parcialmente en memoria hace que ya se generen
-    // unos TNULL "virtuales". Por lo cual no es necesario generar
-    // un nodo que represente un TNULL (contrario al arbol en memoria)
-
-    // Funciones de la clase
-    //  Constructor de la clase
-    ArbolEnDisco(const char *filename);
-
-    // Este es el tamano de la cabecera
-    const static int inicioDataNodos =
-        {
-            sizeof(nroNodos) + sizeof(idRaiz)};
-
-    // Decontructor para asegurar el almacenamiento de datos
-    ~ArbolEnDisco();
-
-    //
-    // Son las mismas operaciones del ArbolRojo pero aplicadas sobre el disco
-    //
-    void Insertar_Disco(std::fstream &data_stream, Elemento elemento);
-    void AjustarInsercion_Disco(std::fstream &data_stream, int idNodo);
-
-    Nodo *Buscar_Disco(std::fstream &data_stream, int valor);
-
-    void Eliminar_Disco(std::fstream &data_stream, int valor);
-    void AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo, int idNodoPadre);
-    //Nuevos
-    void rbTransplant_Disco(std::fstream &data_stream, int idNodoU, int idNodoV);
-    Nodo* minimum_Disco(std::fstream &data_stream, int idNodo);
-    Nodo* maximum_Disco(std::fstream &data_stream, int idNodo);
-
-
-    Nodo *CrearNodo_Disco(std::fstream &data_stream, Elemento elemento);
-
-    void RotarIzquierda_Disco(std::fstream &data_stream, int idNodo);
-    void RotarDerecha_Disco(std::fstream &data_stream, int idNodo);
-
-    void CambiarColor_Disco(std::fstream &data_stream, int idNodo, bool color);
-
-    //
-    // Control de nodos en Disco
-    //
-    Nodo *obtenerNodo_Disco(std::fstream &data_stream, int nodoId);
-    void actualizarDatosNodo_Disco(std::fstream &data_stream, int nodoId, EditarNodo variableEditar, int nuevoValor);
-    void EliminarNodo_Disco(std::fstream &data_stream, int nodoId);
-    
-
-    // Funciones adicionales
-    void guardarNodosEnDisco_MASIVO(ArbolRB *arbol);
-
-    void recorridoInOrder(std::fstream &data_stream, int nodoRaiz);
-};
 
 // Constructor de la clase
 ArbolEnDisco::ArbolEnDisco(const char *filename)
@@ -143,6 +73,8 @@ ArbolEnDisco::ArbolEnDisco(const char *filename)
         fileOUT.close();
     }
 }
+
+const int ArbolEnDisco::inicioDataNodos = { sizeof(nroNodos) + sizeof(idRaiz) };
 
 ArbolEnDisco::~ArbolEnDisco()
 {
@@ -949,6 +881,7 @@ void ArbolEnDisco::recorridoInOrder(std::fstream &data_stream, int idNodo)
 }
 
 // ---- Fin de clase ----
+/*
 
 void imprimirNodo(Nodo *nodo)
 {
@@ -974,7 +907,6 @@ void imprimirNodo(Nodo *nodo)
         std::cout << "Color NEGRO" << std::endl;
     }
 }
-
 
 //Funcion para verificar rapidamente el funcionamiento del arbol 
 void inOrderTraversal(Nodo* nodo)
@@ -1030,7 +962,7 @@ int mainMemoria() // main memoria
     return 0;
 }
 
-int main() // main disco
+int mainDisco() // main disco
 {
     ArbolEnDisco arbol("Arbol.bin");
 
@@ -1077,3 +1009,4 @@ int main() // main disco
 
     return 0;
 }
+*/

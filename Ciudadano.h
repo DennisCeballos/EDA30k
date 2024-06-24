@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 
+#ifndef CIUDADANOS_H
+#define CIUDADANOS_H
+
 #define SIZE_DATOS 120
 
 struct Ciudadano
@@ -14,10 +17,10 @@ public:
 
     Ciudadano( 
                 int _dni,
-                const char* _datos
+                const std::string& _datos
             )
     {
-        strncpy(this->datos, _datos, 120); //datos = _datos.substr(0,120);
+        strncpy(this->datos, _datos.c_str(), 120); //datos = _datos.substr(0,120);
         dni = _dni;
     };
     
@@ -40,3 +43,4 @@ public:
 
 };
 
+#endif //CIUDADANOS_H
