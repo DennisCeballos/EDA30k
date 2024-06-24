@@ -500,6 +500,7 @@ int main() //main cargaMasiva
         std::cerr << "Unable to open file" << std::endl;
         return 1;
     }
+    cout<<"Se termino de obtener Ciudadanos"<<endl;
 
     // Guardar masivamente en un binario los ciudadanos
     vector<int> ids = gestionCiudadanos.guardarCiudadano_MASIVO(ciudadanos, false);
@@ -512,7 +513,7 @@ int main() //main cargaMasiva
         //Insertando al arbol en RAM individualmente cada dni y id
         Insertar(&arbol, Elemento(i, dnis.at(i)));
     }
-
+    cout<<"Se termino de construir el arbol"<<endl;
     
     //Guarda masivamente el arbol generado en un archivo binario en disco
     inOrderTraversal(arbol.raiz);
