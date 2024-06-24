@@ -197,28 +197,9 @@ void Eliminar(ArbolRB *arbol, int dni)
     }
 }
 
-// Retorna el nodo que tiene el segundo valor mas alto del arbol para mantenerlo ordenado -> "sucesor in-order"
-Nodo *ObtenerSiguiente(Nodo *nodo)
-{
-    while (nodo->izquierda != nullptr)
-    {
-        nodo = nodo->izquierda;
-    }
-    return nodo;
-}
-
 // Funcion para ~cambiar los valores~ de dos nodos
 void rbTransplant(ArbolRB *arbol, Nodo *nodoU, Nodo *nodoV)
 {
-    if (nodoU == nullptr)
-    {
-        nodoU = new Nodo();
-    }
-    if (nodoV == nullptr)
-    {
-        nodoV = new Nodo();
-    }
-
     if (nodoU->padre == nullptr)
     {
         arbol->raiz = nodoV;
@@ -294,7 +275,7 @@ void AjustarEliminacion(ArbolRB *arbol, Nodo *x)
                 x = arbol->raiz;
             }
         }
-        else
+        else //En caso este en el otro lado
         {
             s = x->padre->izquierda;
             if (s->color == ROJO)
@@ -305,7 +286,7 @@ void AjustarEliminacion(ArbolRB *arbol, Nodo *x)
                 RotarDerecha(arbol, x->padre);
                 s = x->padre->izquierda;
             }
-            if (s->derecha->color == NEGRO && s->derecha->color == NEGRO)
+            if (s->derecha->color == NEGRO && s->izquierda->color == NEGRO)
             {
                 // case 3.2
                 CambiarColor(s, ROJO);

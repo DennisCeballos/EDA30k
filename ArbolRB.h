@@ -75,7 +75,6 @@ void AjustarInsercion       (ArbolRB *arbol, Nodo *nodo);
 Nodo *Buscar                (ArbolRB *arbol, int valor);
 
 void Eliminar               (ArbolRB *arbol, int valor);
-Nodo *ObtenerSiguiente      (Nodo *nodo);
 void AjustarEliminacion     (ArbolRB *arbol, Nodo *nodo);
 //Nuevos
 void rbTransplant           (ArbolRB *arbol, Nodo *nodoU, Nodo *nodoV);

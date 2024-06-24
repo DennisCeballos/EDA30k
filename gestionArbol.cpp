@@ -51,14 +51,12 @@ public:
     // Son las mismas operaciones del ArbolRojo pero aplicadas sobre el disco
     //
     void Insertar_Disco(std::fstream &data_stream, Elemento elemento);
-    void InsertarRecursivamente_Disco(std::fstream &data_stream, int idNodoActual, int idNuevoNodo);
     void AjustarInsercion_Disco(std::fstream &data_stream, int idNodo);
 
     Nodo *Buscar_Disco(std::fstream &data_stream, int valor);
 
-    Nodo *Eliminar_Disco(std::fstream &data_stream, int valor);
-    Nodo *ObtenerSiguiente_Disco(std::fstream &data_stream, int idNodo);
-    void AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo);
+    void Eliminar_Disco(std::fstream &data_stream, int valor);
+    void AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo, int idNodoPadre);
     //Nuevos
     void rbTransplant_Disco(std::fstream &data_stream, int idNodoU, int idNodoV);
     Nodo* minimum_Disco(std::fstream &data_stream, int idNodo);
@@ -190,59 +188,55 @@ ArbolEnDisco::~ArbolEnDisco()
 
 void ArbolEnDisco::Insertar_Disco(std::fstream &data_stream, Elemento elemento)
 {
-    Nodo *nuevoNodo = CrearNodo_Disco(data_stream, elemento);
+    Nodo *nodo = CrearNodo_Disco(data_stream, elemento);
     
-    Nodo* y = nullptr;
+    Nodo* y = new Nodo();
     Nodo* x = obtenerNodo_Disco(data_stream, this->idRaiz);
+
+    while ( x->id != -1 )
+    {
+        y = x;
+        if( nodo->elemento.dni < x->elemento.dni )
+        {
+            x = obtenerNodo_Disco(data_stream, x->idIzquierda);
+        }
+        else
+        {
+            x = obtenerNodo_Disco(data_stream, x->idDerecha);
+        }
+    }
+
+    actualizarDatosNodo_Disco(data_stream, nodo->id, EditarNodo::idPadre, y->id);
+    nodo->idPadre = y->id; //Se actualiza el dato en disco y en memoria porque sera util mas adelante
     
-    if (this->idRaiz == -1)
+    if (y->id == -1)
     {
-        this->idRaiz = nuevoNodo->id;
-        CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO);
+        this->idRaiz = nodo->id;
+    }
+    else if ( nodo->elemento.dni < y->elemento.dni )
+    {
+        actualizarDatosNodo_Disco(data_stream, y->id, EditarNodo::idIzquierda, nodo->id);
     }
     else
     {
-        InsertarRecursivamente_Disco(data_stream, this->idRaiz, nuevoNodo->id);
-        CambiarColor_Disco(data_stream, nuevoNodo->id, ROJO); //? Si por defecto se genera un nuevoNodo rojo, esta linea estaria de mas
+        actualizarDatosNodo_Disco(data_stream, y->id, EditarNodo::idDerecha, nodo->id);
     }
-    std::cout << "Se inserta el nodo con dni: " << nuevoNodo->elemento.dni << std::endl;
-    AjustarInsercion_Disco(data_stream, nuevoNodo->id);
-}
 
-void ArbolEnDisco::InsertarRecursivamente_Disco(std::fstream &data_stream, int idNodoActual, int idNuevoNodo)
-{
-
-    Nodo *nodoActual = obtenerNodo_Disco(data_stream, idNodoActual);
-    Nodo *nuevoNodo = obtenerNodo_Disco(data_stream, idNuevoNodo);
-
-    if (nuevoNodo->elemento.dni < nodoActual->elemento.dni)
+    if (nodo->idPadre == -1)
     {
-        if (nodoActual->idIzquierda == -1)
-        {
-            // Actualizar datos en el disco
-            actualizarDatosNodo_Disco(data_stream, nodoActual->id, EditarNodo::idIzquierda, idNuevoNodo);
-            actualizarDatosNodo_Disco(data_stream, nuevoNodo->id, EditarNodo::idPadre, idNodoActual);
-        }
-        else
-        {
-            InsertarRecursivamente_Disco(data_stream, nodoActual->idIzquierda, idNuevoNodo);
-        }
-    }
-    else
-    {
-        if (nodoActual->idDerecha == -1)
-        {
-            actualizarDatosNodo_Disco(data_stream, nodoActual->id, EditarNodo::idDerecha, idNuevoNodo);
-            actualizarDatosNodo_Disco(data_stream, nuevoNodo->id, EditarNodo::idPadre, idNodoActual);
-        }
-        else
-        {
-            InsertarRecursivamente_Disco(data_stream, nodoActual->idDerecha, idNuevoNodo);
-        }
+        CambiarColor_Disco(data_stream, nodo->id, NEGRO);
+        return;
     }
 
-    // Eliminar de memoria las variables
-    delete nodoActual, nuevoNodo;
+    Nodo* nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
+    if (nodoPadre->idPadre == -1)
+    {
+        return;
+    }
+
+    AjustarInsercion_Disco(data_stream, nodo->id);
+    //TODO
+    //ELIMINAR LOS NODOS PARALIBERAR ESPACIO DE MEMORIA
 }
 
 void ArbolEnDisco::AjustarInsercion_Disco(std::fstream &data_stream, int idNodo)
@@ -260,13 +254,44 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream &data_stream, int idNodo)
         nodoPadrePadre = obtenerNodo_Disco(data_stream, nodoPadre->idPadre);
 
         // if que reemplaza al while
-        if (nodo->idPadre != -1 && nodoPadre->color == ROJO) // reemplazo del While
+        if (nodoPadre->color == ROJO) // reemplazo del While
         {
-            if (nodoPadre->id == nodoPadrePadre->idIzquierda)
+            if (nodoPadre->id == nodoPadrePadre->idDerecha)
+            {
+                Nodo *tio = obtenerNodo_Disco(data_stream, nodoPadrePadre->idIzquierda);
+                if (tio->color == ROJO) //if tio.id != -1
+                {
+                    //Caso 3.1
+                    CambiarColor_Disco(data_stream, tio->id, NEGRO);
+                    CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
+                    CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
+                    idNodo = nodoPadrePadre->id;
+                }
+                else
+                {
+                    if (idNodo == nodoPadre->idIzquierda)
+                    {
+                        // caso 3.2
+                        idNodo = nodoPadre->id;
+                        RotarDerecha_Disco(data_stream, idNodo);
+                        // Ya que se cambia el valor del idNodo (Y posteriormente son necesarios esos datos)
+                        // es necesario re-actualizar los valores de los nodoPadre y nodoPadrePadre
+                        // TODO: MEJORABLE PARA EVITAR TRABAJO SOBRE DISCO
+                        nodo = obtenerNodo_Disco(data_stream, idNodo);
+                        nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
+                        nodoPadrePadre = obtenerNodo_Disco(data_stream, nodoPadre->idPadre);
+                    }
+                    CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
+                    CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
+                    RotarIzquierda_Disco(data_stream, nodoPadrePadre->id);
+                }
+            }
+            else
             {
                 Nodo *tio = obtenerNodo_Disco(data_stream, nodoPadrePadre->idDerecha);
-                if (tio->id != -1 && tio->color == ROJO)
+                if (tio->color == ROJO) //? verificar si tio->id !=-1
                 {
+                    // caso 3.1 reflejo
                     CambiarColor_Disco(data_stream, tio->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
@@ -276,6 +301,7 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream &data_stream, int idNodo)
                 {
                     if (idNodo == nodoPadre->idDerecha)
                     {
+                        // caso 3.2.2 (espejo)
                         idNodo = nodoPadre->id;
                         RotarIzquierda_Disco(data_stream, idNodo);
 
@@ -290,34 +316,6 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream &data_stream, int idNodo)
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
                     RotarDerecha_Disco(data_stream, nodoPadrePadre->id);
-                }
-            }
-            else
-            {
-                Nodo *tio = obtenerNodo_Disco(data_stream, nodoPadrePadre->idIzquierda);
-                if (tio->id != -1 && tio->color == ROJO)
-                {
-                    CambiarColor_Disco(data_stream, tio->id, NEGRO);
-                    CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
-                    CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
-                    idNodo = nodoPadrePadre->id;
-                }
-                else
-                {
-                    if (idNodo == nodoPadre->idIzquierda)
-                    {
-                        idNodo = nodoPadre->id;
-                        RotarDerecha_Disco(data_stream, idNodo);
-                        // Ya que se cambia el valor del idNodo (Y posteriormente son necesarios esos datos)
-                        // es necesario re-actualizar los valores de los nodoPadre y nodoPadrePadre
-                        // TODO: MEJORABLE PARA EVITAR TRABAJO SOBRE DISCO
-                        nodo = obtenerNodo_Disco(data_stream, idNodo);
-                        nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
-                        nodoPadrePadre = obtenerNodo_Disco(data_stream, nodoPadre->idPadre);
-                    }
-                    CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
-                    CambiarColor_Disco(data_stream, nodoPadrePadre->id, ROJO);
-                    RotarIzquierda_Disco(data_stream, nodoPadrePadre->id);
                 }
             }
             if (idNodo == this->idRaiz)
@@ -337,99 +335,98 @@ void ArbolEnDisco::AjustarInsercion_Disco(std::fstream &data_stream, int idNodo)
 Nodo *ArbolEnDisco::Buscar_Disco(std::fstream &data_stream, int valorDni)
 {
     Nodo *nodoActual = obtenerNodo_Disco(data_stream, this->idRaiz);
-    while (nodoActual->id != -1 && nodoActual->elemento.dni != valorDni)
+    while (nodoActual->id != -1)
     {
-        if (valorDni < nodoActual->elemento.dni)
+        if (nodoActual->elemento.dni == valorDni)
         {
-            nodoActual = obtenerNodo_Disco(data_stream, nodoActual->idIzquierda);
+            return nodoActual;
+        }
+
+        if( nodoActual->elemento.dni <= valorDni)
+        {
+            nodoActual = obtenerNodo_Disco(data_stream, nodoActual->idDerecha);
         }
         else
         {
             nodoActual = obtenerNodo_Disco(data_stream, nodoActual->idDerecha);
-        }
+        }        
     }
     return nodoActual;
 }
 
 // Funcion llamada para eliminar un nodo del arbol
-Nodo *ArbolEnDisco::Eliminar_Disco(std::fstream &data_stream, int dni)
+void ArbolEnDisco::Eliminar_Disco(std::fstream &data_stream, int dni)
 {
-    Nodo *nodoReemplazo = nullptr;
-    Nodo *hijoReemplazo = nullptr;
-    Nodo *nodoAEliminar = Buscar_Disco(data_stream, dni);
 
-    if (nodoAEliminar->id == -1)
+    Nodo *z = Buscar_Disco(data_stream, dni);
+    Nodo *x = new Nodo();
+    Nodo *y = new Nodo();
+
+    if ( z->id == -1)
     {
-        return new Nodo();
+        return;
     }
 
-    if (nodoAEliminar->idIzquierda == -1 || nodoAEliminar->idDerecha == -1)
+    y = z;
+    bool y_original_color = y->color;
+    
+    if (z->idIzquierda == -1)
     {
-        nodoReemplazo = nodoAEliminar;
+        x = obtenerNodo_Disco(data_stream, z->id);
+        x->idPadre = z->id; //Reafirmar el origen del padre solo por si acaso
+
+        rbTransplant_Disco(data_stream, z->id, z->idDerecha);
+        z = obtenerNodo_Disco(data_stream, z->id);
+    }
+    else if (z->idDerecha == -1)
+    {
+        x = obtenerNodo_Disco(data_stream, z->idIzquierda);
+        x->idPadre = z->idIzquierda;
+        rbTransplant_Disco(data_stream, z->id, z->idIzquierda);
+        z = obtenerNodo_Disco(data_stream, z->id);
     }
     else
     {
-        nodoReemplazo = ObtenerSiguiente_Disco(data_stream, nodoAEliminar->idDerecha); // La funcion requiere que se mande el idDerecha del nodo
-    }
-
-    if (nodoReemplazo->idIzquierda != -1)
-    {
-        hijoReemplazo = obtenerNodo_Disco(data_stream, nodoReemplazo->idIzquierda);
-    }
-    else
-    {
-        hijoReemplazo = obtenerNodo_Disco(data_stream, nodoReemplazo->idDerecha);
-    }
-
-    if (hijoReemplazo->id != -1)
-    {
-        actualizarDatosNodo_Disco(data_stream, hijoReemplazo->id, EditarNodo::idPadre, nodoReemplazo->idPadre);
-    }
-
-    if (nodoReemplazo->idPadre == -1)
-    {
-        this->idRaiz = hijoReemplazo->id;
-    }
-    else
-    {
-        Nodo *nodoReemplazoPadre = obtenerNodo_Disco(data_stream, nodoReemplazo->idPadre);
-        if (nodoReemplazo->id == nodoReemplazoPadre->idIzquierda)
+        y = minimum_Disco(data_stream, z->idDerecha);
+        y_original_color = y->color;
+        x = obtenerNodo_Disco(data_stream, y->idDerecha);
+        x->idPadre = y->idDerecha;
+        if (y->idPadre == z->id)
         {
-            actualizarDatosNodo_Disco(data_stream, nodoReemplazoPadre->id, EditarNodo::idIzquierda, hijoReemplazo->id);
+            actualizarDatosNodo_Disco(data_stream, x->id, EditarNodo::idPadre, y->id);
         }
         else
         {
-            actualizarDatosNodo_Disco(data_stream, nodoReemplazoPadre->id, EditarNodo::idDerecha, hijoReemplazo->id);
+            rbTransplant_Disco(data_stream, y->id, y->idDerecha);
+            
+            y = obtenerNodo_Disco(data_stream, y->id); //Necesario tras el anterior funcion de REEMPLAZO
+            actualizarDatosNodo_Disco(data_stream, y->id, EditarNodo::idDerecha, z->idDerecha);
+            y->idDerecha = z->idDerecha;
+
+            Nodo* yDerecha = obtenerNodo_Disco(data_stream, y->idDerecha);
+            actualizarDatosNodo_Disco(data_stream, yDerecha->id, EditarNodo::idPadre, y->id);
         }
+
+        rbTransplant_Disco(data_stream, z->id, y->id);
+        z = obtenerNodo_Disco(data_stream, z->id);
+        actualizarDatosNodo_Disco(data_stream, y->id, EditarNodo::idIzquierda, z->idIzquierda);
+        y->idIzquierda = z->idIzquierda;
+
+        // puedo utilizar a z->idIzquierda para no volver a obtener a y desde disco
+        Nodo* yIzquierda = obtenerNodo_Disco(data_stream, y->idIzquierda);
+        actualizarDatosNodo_Disco(data_stream, yIzquierda->id, EditarNodo::idPadre, y->id);
+        CambiarColor_Disco(data_stream, y->id, z->color);
     }
 
-    if (nodoReemplazo->id != nodoAEliminar->id)
+    EliminarNodo_Disco(data_stream, z->id);
+    delete z; 
+    if (y_original_color == NEGRO)
     {
-        nodoAEliminar->elemento = nodoReemplazo->elemento;
+        AjustarEliminacion_Disco(data_stream, x->id, x->idPadre);
     }
-
-    if (nodoReemplazo->color == NEGRO)
-    {
-        AjustarEliminacion_Disco(data_stream, nodoAEliminar->id);
-    }
-
-    //Funcion para "ELIMINAR" un nodo del archivo
-    EliminarNodo_Disco(data_stream, nodoAEliminar->id);
-    return nodoAEliminar;
 }
 
-// Retorna el nodo que tiene como sucesor "in-order"
-Nodo *ArbolEnDisco::ObtenerSiguiente_Disco(std::fstream &data_stream, int idNodo_derecha)
-{
-    Nodo *actual = obtenerNodo_Disco(data_stream, idNodo_derecha);
-    while (actual->idIzquierda != -1)
-    {
-        actual = obtenerNodo_Disco(data_stream, actual->idIzquierda);
-    }
-    return actual;
-}
-
-void ArbolEnDisco::AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo)
+void ArbolEnDisco::AjustarEliminacion_Disco(std::fstream &data_stream, int idNodo, int idNodoPadre)
 {
     // Generar los nodos necesarios para el calculo con el que se va trabajar
     Nodo *nodo;
@@ -443,6 +440,10 @@ void ArbolEnDisco::AjustarEliminacion_Disco(std::fstream &data_stream, int idNod
     while (continuarFlag)
     {
         nodo = obtenerNodo_Disco(data_stream, idNodo);
+        if (idNodo == -1)
+        {
+            nodo->idPadre = idNodoPadre;            
+        }
         nodoPadre = obtenerNodo_Disco(data_stream, nodo->idPadre);
 
         // If enorme que reemplaza al while clasico
@@ -451,80 +452,153 @@ void ArbolEnDisco::AjustarEliminacion_Disco(std::fstream &data_stream, int idNod
             if (nodo->id == nodoPadre->idIzquierda)
             {
                 hermano = obtenerNodo_Disco(data_stream, nodoPadre->idDerecha);
-                if (nodo->id == nodoPadre->idIzquierda)
+                hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
+                if (hermano->color == ROJO)
                 {
+                    //Caso 3.1
                     CambiarColor_Disco(data_stream, hermano->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadre->id, ROJO);
                     RotarIzquierda_Disco(data_stream, nodoPadre->id);
                     hermano = obtenerNodo_Disco(data_stream, nodoPadre->idDerecha);
+                    
+                    // TODO BUSCAR UNA MANERA DE OPTIMIZAR ESTO (se actualiza varias veces el valor de los hermanos)
+                    hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                    hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
                 }
 
-                // Generar datos que son necesarios a continuacion por el codigo
-                hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
-                hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
                 if (hermanoIzquierda->color == NEGRO && hermanoDerecha->color == NEGRO)
                 {
+                    //Caso 3.2
                     CambiarColor_Disco(data_stream, hermano->id, ROJO);
                     idNodo = nodoPadre->id;
+                    //Aca se hace imposible que idNodo sea de un TNULL
+                    // por ende innecesario actualizar el valor del idNodoPadre "correctamente"
                 }
                 else
                 {
                     if (hermanoDerecha->color == NEGRO)
                     {
+                        //Caso 3.3
                         CambiarColor_Disco(data_stream, hermanoIzquierda->id, NEGRO);
-                        CambiarColor_Disco(data_stream, hermano->id, NEGRO);
+                        CambiarColor_Disco(data_stream, hermano->id, ROJO);
                         RotarDerecha_Disco(data_stream, hermano->id);
                         hermano = obtenerNodo_Disco(data_stream, nodoPadre->idDerecha);
+
+                        // TODO BUSCAR UNA MANERA DE OPTIMIZAR ESTO (se actualiza varias veces el valor de los hermanos)
+                        hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                        hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
                     }
+                    //Caso 3.4
                     CambiarColor_Disco(data_stream, hermano->id, nodoPadre->color);
                     CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
-                    CambiarColor_Disco(data_stream, hermano->idDerecha, NEGRO);
+                    CambiarColor_Disco(data_stream, hermanoDerecha->id, NEGRO);
                     RotarIzquierda_Disco(data_stream, nodoPadre->id);
                     idNodo = this->idRaiz;
+                    //Aca se hace imposible que idNodo sea de un TNULL
+                    // por ende innecesario actualizar el valor del idNodoPadre "correctamente"
                 }
             }
-            else
+            else //Caso del otro lado
             {
                 hermano = obtenerNodo_Disco(data_stream, nodoPadre->idIzquierda);
+                hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
+                
                 if (hermano->color == ROJO)
-                    ;
                 {
+                    //Caso 3.1
                     CambiarColor_Disco(data_stream, hermano->id, NEGRO);
                     CambiarColor_Disco(data_stream, nodoPadre->id, ROJO);
                     RotarDerecha_Disco(data_stream, nodoPadre->id);
                     hermano = obtenerNodo_Disco(data_stream, nodoPadre->idIzquierda);
+                    
+                    // TODO BUSCAR UNA MANERA DE OPTIMIZAR ESTO (se actualiza varias veces el valor de los hermanos)
+                    hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                    hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
                 }
 
-                // Obtener datos necesarios para la continuacion del codigo
-                hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
-                hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
-                if (hermanoIzquierda->color == NEGRO && hermanoDerecha->color == NEGRO)
+                if (hermanoDerecha->color == NEGRO && hermanoIzquierda->color == NEGRO)
                 {
+                    //Caso 3.2
                     CambiarColor_Disco(data_stream, hermano->id, ROJO);
                     idNodo = nodoPadre->id;
+                    //Aca se hace imposible que idNodo sea de un TNULL
+                    // por ende innecesario actualizar el valor del idNodoPadre "correctamente"
                 }
                 else
                 {
                     if (hermanoIzquierda->color == NEGRO)
                     {
+                        //Caso 3.3
                         CambiarColor_Disco(data_stream, hermanoDerecha->id, NEGRO);
                         CambiarColor_Disco(data_stream, hermano->id, ROJO);
-                        RotarIzquierda_Disco(data_stream, hermano->id);
+                        RotarDerecha_Disco(data_stream, hermano->id);
+                        hermano = obtenerNodo_Disco(data_stream, nodoPadre->idIzquierda);
+
+                        // TODO BUSCAR UNA MANERA DE OPTIMIZAR ESTO (se actualiza varias veces el valor de los hermanos)
+                        hermanoIzquierda = obtenerNodo_Disco(data_stream, hermano->idIzquierda);
+                        hermanoDerecha = obtenerNodo_Disco(data_stream, hermano->idDerecha);
                     }
+                    //Caso 3.4
                     CambiarColor_Disco(data_stream, hermano->id, nodoPadre->color);
-                    CambiarColor_Disco(data_stream, nodoPadre->id, nodoPadre->color);
+                    CambiarColor_Disco(data_stream, nodoPadre->id, NEGRO);
                     CambiarColor_Disco(data_stream, hermanoIzquierda->id, NEGRO);
-                    RotarDerecha_Disco(data_stream, nodoPadre->id);
+                    RotarIzquierda_Disco(data_stream, nodoPadre->id);
                     idNodo = this->idRaiz;
+                    //Aca se hace imposible que idNodo sea de un TNULL
+                    // por ende innecesario actualizar el valor del idNodoPadre "correctamente"
                 }
             }
         }
-        else // Parte de la conversion del while clasico hacia un if
+        else
         {
             continuarFlag = false;
         }
     }
     CambiarColor_Disco(data_stream, idNodo, NEGRO);
+}
+
+//Se reemplaza el NodoU con el NodoV
+void ArbolEnDisco::rbTransplant_Disco(std::fstream &data_stream, int idNodoU, int idNodoV)
+{
+    Nodo *nodoU = obtenerNodo_Disco(data_stream, idNodoU);
+    Nodo *nodoUPadre = obtenerNodo_Disco(data_stream, nodoU->idPadre);
+    Nodo *nodoV = obtenerNodo_Disco(data_stream, idNodoV);
+    if ( nodoUPadre->id == -1)
+    {
+        this->idRaiz = nodoV->id;
+    }
+    else if ( nodoU->id == nodoUPadre->idIzquierda )
+    {
+        actualizarDatosNodo_Disco(data_stream, nodoUPadre->id, EditarNodo::idIzquierda, nodoV->id);
+    }
+    else
+    {
+        actualizarDatosNodo_Disco(data_stream, nodoUPadre->id, EditarNodo::idDerecha, nodoV->id);
+    }
+    actualizarDatosNodo_Disco(data_stream, nodoV->id, EditarNodo::idPadre, nodoUPadre->id);
+}
+
+Nodo *ArbolEnDisco::maximum_Disco(std::fstream &data_stream, int idNodo)
+{
+    Nodo* nodo = obtenerNodo_Disco(data_stream, idNodo);
+    while (nodo->idDerecha != -1)
+    {
+        nodo = obtenerNodo_Disco(data_stream, nodo->idDerecha);
+    }
+    return nodo;
+    
+}
+
+Nodo *ArbolEnDisco::minimum_Disco(std::fstream &data_stream, int idNodo)
+{
+    Nodo *nodo = obtenerNodo_Disco(data_stream, idNodo);
+    while (nodo->idIzquierda != -1)
+    {
+        nodo = obtenerNodo_Disco(data_stream, nodo->idIzquierda);
+    }
+    return nodo;
 }
 
 // Guarda un nodo en Disco y retorna su ID(ubicacion relativa)
@@ -673,6 +747,7 @@ Nodo *ArbolEnDisco::obtenerNodo_Disco(std::fstream &data_stream, int nodoId)
     }
 
     // Moverse hasta la posicion de IDNodo + iniciando en el inicio de datos
+    data_stream.clear();
     data_stream.seekg(ArbolEnDisco::inicioDataNodos + Nodo::sizeBinario * nodoId, std::ios::beg);
 
     int posDebug = data_stream.tellg();
@@ -866,7 +941,8 @@ void ArbolEnDisco::recorridoInOrder(std::fstream &data_stream, int idNodo)
     this->recorridoInOrder(data_stream, nodoActual->idIzquierda);
 
     // Print current node value
-    std::cout << nodoActual->elemento.dni << " ";
+    char clr = (nodoActual->color)? 'R' : 'N';
+    std::cout << clr << nodoActual->elemento.dni << " ";
 
     // Traverse right subtree
     this->recorridoInOrder(data_stream, nodoActual->idDerecha);
@@ -921,7 +997,7 @@ void inOrderTraversal(Nodo* nodo)
     inOrderTraversal(nodo->derecha);
 }
 
-int main() // main memoria
+int mainMemoria() // main memoria
 {
     ArbolRB arbol;
     // Insercion del id y dni
@@ -954,7 +1030,7 @@ int main() // main memoria
     return 0;
 }
 
-int mainDisco() // main disco
+int main() // main disco
 {
     ArbolEnDisco arbol("Arbol.bin");
 
@@ -965,27 +1041,10 @@ int mainDisco() // main disco
     arbol.Insertar_Disco(archivo, Elemento(99, 54)); // 3
     arbol.Insertar_Disco(archivo, Elemento(99, 72)); // 4
     arbol.Insertar_Disco(archivo, Elemento(99, 85)); // 5
-    
+    arbol.Insertar_Disco(archivo, Elemento(99, 5)); // 6
+    arbol.Insertar_Disco(archivo, Elemento(99, 35)); // 7
+    arbol.Insertar_Disco(archivo, Elemento(99, 4)); // 8
 
-    arbol.Eliminar_Disco(archivo, 72);
-    arbol.Eliminar_Disco(archivo, 54);
-
-    /*
-    Insertar(&arbol, Elemento(99, 9));
-    Insertar(&arbol, Elemento(99, 33));
-    Insertar(&arbol, Elemento(99, 11));
-    Insertar(&arbol, Elemento(99, 54));
-    Insertar(&arbol, Elemento(99, 72));
-    Insertar(&arbol, Elemento(99, 85));
-
-    Eliminar(&arbol, 54);
-    Eliminar(&arbol, 72);
-
-    Insertar(&arbol, Elemento(99, 59));
-    Insertar(&arbol, Elemento(99, 20));
-    Insertar(&arbol, Elemento(99, 20));
-    Eliminar(&arbol, 11);
-    */
    
     Nodo *nodo;
     for (int i = 0; i <= 10; i++)
