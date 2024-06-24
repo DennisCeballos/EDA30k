@@ -794,7 +794,7 @@ void ArbolEnDisco::EliminarNodo_Disco(std::fstream &data_stream, int idNodo)
 void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
 {
     // TODO REVISAR, ESTO PUEDE FALLAR POR ESTO DEL NULLPTR
-    if (arbol->raiz == nullptr)
+    if (arbol->raiz == arbol->TNULL)
     {
         std::cout << "Se intento guardar un arbol vacio";
         return;
@@ -813,9 +813,9 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
         // Guarda el elemento
         concatenado.push_back(actual);
 
-        if (actual->izquierda != nullptr)
+        if (actual->izquierda != arbol->TNULL)
             fila.push(actual->izquierda);
-        if (actual->derecha != nullptr)
+        if (actual->derecha != arbol->TNULL)
             fila.push(actual->derecha);
     }
 
@@ -829,6 +829,8 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
     // Moverse hasta la posicion de los datos de los nodos
     file.seekp(ArbolEnDisco::inicioDataNodos, std::ios::beg);
 
+    int posDebug = file.tellp();
+
     int aux;
     //! Ya que es subida masiva, se deben generar los valores de los ID's de los nodos
     // cada valor se genera a partir de una operacion matematica especifica
@@ -838,9 +840,11 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
         // ESTA *ES* LA ESTRUCTURA DE UN NODO EN BINARIO
 
         aux = i * 2 + 1; // Calculo del idIzquierda
+        if (aux > concatenado.size()-1) aux = -1; //En caso sea un nodo que no existe
         file.write(reinterpret_cast<char *>(&aux), sizeof(int));
 
         aux = i * 2 + 2; // Calculo del idDerecha
+        if (aux > concatenado.size()-1) aux = -1; //En caso sea un nodo que no existe
         file.write(reinterpret_cast<char *>(&aux), sizeof(int));
 
         aux = std::floor(i / 2 - 0.5); // Calculo del idPadre
@@ -851,10 +855,10 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
         file.write(reinterpret_cast<char *>(&concatenado.at(i)->color), sizeof(bool));
     }
 
-    // Actualizar el numero de nodos antes de cerrar el documento
+    // Actualizar el numero de nodos y el idRaiz antes de cerrar terminar
+    // (el deconstructor de la clase se encarga de guardar estos datos en archivo)
     this->nroNodos = concatenado.size();
-    file.seekp(0, std::ios::beg);
-    file.write(reinterpret_cast<char *>(&nroNodos), sizeof(nroNodos));
+    this->idRaiz = 0;
 
     // Cerrar el archivo
     file.close();

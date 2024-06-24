@@ -1,6 +1,9 @@
 #include <iostream>
 #include <windows.h>
 
+#include <sstream>
+#include <fstream>
+#include <vector>
 #include <string>
 #include <regex>
 
@@ -106,7 +109,7 @@ Variables globales importantes
 */
 
 
-int main() {
+int mainPrincipal() {
     //Menu principal
     bool repite = true;
     int opcion;
@@ -350,6 +353,8 @@ void menu_Buscar() {
         switch (opcion) {
         case 1:
             do {
+                cout << "Nro. Ciudadanos registrados: "<<gestionCiudadanos.getNroCiudadanos()<<endl;
+
                 cout << "DNI (8 caracteres numericos): ";
                 cin >> DNI;
 
@@ -365,6 +370,7 @@ void menu_Buscar() {
             {
                 int dniInt = stoi(DNI);
                 Nodo* nodo = gestionArbol.Buscar_Disco(arbolData_stream, dniInt);
+                gestionArbol.recorridoInOrder(arbolData_stream, gestionArbol.idRaiz);
                 if (nodo->id == -1)
                 {
                     cout<< "No se encontro un usuario con DNI "<<dniInt;
@@ -438,4 +444,79 @@ int menu(const char titulo[], const char* opciones[], int n) {
     } while (repite);
 
     return opcionSeleccionada;
+}
+
+void inOrderTraversal(Nodo* nodo)
+{
+    if (nodo == nullptr) {
+        return;
+    }
+
+    // Traverse left subtree
+    inOrderTraversal(nodo->izquierda);
+
+    // Print current node value
+    if (nodo->elemento.dni != -1)
+    {
+        std::string color = (nodo->color)? "R" : "N";
+        std::cout << color <<nodo->elemento.dni << " ";
+    }
+
+    // Traverse right subtree
+    inOrderTraversal(nodo->derecha);
+}
+
+int main() //main cargaMasiva
+{
+    std::ifstream file("TF_datosDNI.csv"); //nombre del archivo CSV
+    std::vector<Ciudadano*> ciudadanos;
+    std::vector<int> dnis;
+
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            std::string token;
+            std::vector<std::string> tokens;
+
+            while (std::getline(iss, token, ',')) {
+                tokens.push_back(token);
+            }
+
+            if (tokens.size() == 13) { // assuming 13 columns in the CSV file
+                int dni = std::stoi(tokens[0]);
+                std::string datos = tokens[1] + ";" + tokens[2] + ";" + tokens[3] + ";" + tokens[4] + ";" +
+                                   tokens[5] + ";" + tokens[6] + ";" + tokens[7] + ";" + tokens[8] + ";" +
+                                   tokens[9] + ";" + tokens[10] + ";" + tokens[11] + ";" + tokens[12];
+
+                Ciudadano* ciudadano = new Ciudadano(dni, datos);
+                ciudadanos.push_back(ciudadano);
+                dnis.push_back(dni);
+            }
+        }
+
+        file.close();
+    } else {
+        std::cerr << "Unable to open file" << std::endl;
+        return 1;
+    }
+
+    // Guardar masivamente en un binario los ciudadanos
+    vector<int> ids = gestionCiudadanos.guardarCiudadano_MASIVO(ciudadanos, false);
+    //vector<int> dnis generado anteriormente
+
+    // Generar un arbol con todos los dnis y ids
+    ArbolRB arbol;
+    for (size_t i = 0; i < dnis.size(); i++)
+    {
+        //Insertando al arbol en RAM individualmente cada dni y id
+        Insertar(&arbol, Elemento(i, dnis.at(i)));
+    }
+
+    
+    //Guarda masivamente el arbol generado en un archivo binario en disco
+    inOrderTraversal(arbol.raiz);
+    gestionArbol.guardarNodosEnDisco_MASIVO(&arbol);
+
+    return 0;
 }

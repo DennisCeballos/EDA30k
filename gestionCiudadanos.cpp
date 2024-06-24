@@ -47,7 +47,23 @@ CtrlCiudadano::CtrlCiudadano(const char *_filaName)
 
 CtrlCiudadano::~CtrlCiudadano()
 {
-    
+    //* Crea un stream del archivo
+    std::fstream fileOUT(this->nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
+
+    // *Grabar la cabecera de archivo
+    fileOUT.seekp(0, std::ios::beg);
+    fileOUT.write(reinterpret_cast<char *>(&this->nroElementos), sizeof(nroElementos));
+
+    fileOUT.flush();
+
+    // Cerrar el archivo
+    fileOUT.close();
+    std::cout << "- Se decontruyo un gestorCiudadanos" << std::endl;
+}
+
+int CtrlCiudadano::getNroCiudadanos()
+{
+    return this->nroElementos;
 }
 
 const int CtrlCiudadano::sizeCabecera = sizeof(int); //Se almacena un int al principio para la variable nroElementos

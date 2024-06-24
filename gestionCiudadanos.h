@@ -19,6 +19,7 @@ public:
     const static int sizeCabecera;
 
     std::string getNombreArchivo();
+    int getNroCiudadanos();
 
     // Función para guardar un ciudadano en el archivo binario
     int guardarCiudadano(Ciudadano* ciudadano, bool debug);
