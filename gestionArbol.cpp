@@ -853,6 +853,7 @@ void ArbolEnDisco::guardarNodosEnDisco_MASIVO(ArbolRB *arbol)
         file.write(reinterpret_cast<char *>(&concatenado.at(i)->elemento.dni), sizeof(int));
         file.write(reinterpret_cast<char *>(&concatenado.at(i)->elemento.id), sizeof(int));
         file.write(reinterpret_cast<char *>(&concatenado.at(i)->color), sizeof(bool));
+        file.flush();
     }
 
     // Actualizar el numero de nodos y el idRaiz antes de cerrar terminar

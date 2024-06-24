@@ -752,6 +752,7 @@ int menu(const char titulo[], const char *opciones[], int n)
 
 int main() // main cargaMasiva
 {
+    
     std::ifstream file("TF_datosDNI.csv"); // nombre del archivo CSV
     std::vector<Ciudadano *> ciudadanos;
     std::vector<int> dnis;
@@ -791,11 +792,11 @@ int main() // main cargaMasiva
         return 1;
     }
     cout << "Se termino de obtener Ciudadanos" << endl;
-
     // Guardar masivamente en un binario los ciudadanos
     vector<int> ids = gestionCiudadanos.guardarCiudadano_MASIVO(ciudadanos, false);
     // vector<int> dnis generado anteriormente
 
+    /*
     //Almacenar los ids en un archivo (temporalmente)
     // Abrir el archivo
     std::ofstream outFile("vector_data.txt");
@@ -811,7 +812,8 @@ int main() // main cargaMasiva
     }
 
     outFile.close();
-    std::cout << "Vector data has been written to vector_data.txt" << std::endl;
+    std::cout << "Vector data escrito en el archivo vector_data.txt" << std::endl;
+    
     
     
     //Rearmar el archivo con dnis
@@ -831,7 +833,7 @@ int main() // main cargaMasiva
     }
 
     inFile.close();
-    std::cout << "Vector data has been read from vector_data.txt" << std::endl;
+    std::cout << "Se recontruyo el vector de dni's desde vector_data.txt" << std::endl;
 
     // Generar un arbol con todos los dnis y ids
     ArbolRB arbol;
@@ -844,6 +846,6 @@ int main() // main cargaMasiva
 
     // Guarda masivamente el arbol generado en un archivo binario en disco
     gestionArbol.guardarNodosEnDisco_MASIVO(&arbol);
-
+    */
     return 0;
 }
