@@ -1,0 +1,31 @@
+﻿  Source.cpp
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4267:         with
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4267:         [
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4267:             _Ty=int
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4267:         ]
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4365: 'argument': conversion from 'unsigned __int64' to '_Ty', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4365:         with
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4365:         [
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4365:             _Ty=int
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(45,62): warning C4365:         ]
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(66,34): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(75,97): warning C4100: 'cantidadRegistros': unreferenced formal parameter
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(113,33): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(113,53): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(114,19): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,53): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4267:         with
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4267:         [
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4267:             _Ty=int
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4267:         ]
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4365: 'argument': conversion from 'unsigned __int64' to '_Ty', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4365:         with
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4365:         [
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4365:             _Ty=int
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(129,63): warning C4365:         ]
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(130,38): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(130,44): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\Source.cpp(192,40): warning C4365: 'argument': conversion from 'int' to 'const unsigned __int64', signed/unsigned mismatch
+  SistemaGestionIdentificaciones.vcxproj -> C:\Users\boks0\source\repos\SistemaGestionIdentificaciones\x64\Debug\SistemaGestionIdentificaciones.exe
