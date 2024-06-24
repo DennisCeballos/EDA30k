@@ -14,6 +14,9 @@ private:
 
 public:
     CtrlCiudadano(const char* _filaName);
+    ~CtrlCiudadano();
+
+    const static int sizeCabecera;
 
     std::string getNombreArchivo();
 

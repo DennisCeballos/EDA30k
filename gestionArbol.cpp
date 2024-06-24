@@ -78,7 +78,7 @@ const int ArbolEnDisco::inicioDataNodos = { sizeof(nroNodos) + sizeof(idRaiz) };
 
 ArbolEnDisco::~ArbolEnDisco()
 {
-    //* Crea un nuevo archivo
+    //* Crea un stream del archivo
     std::fstream fileOUT(this->nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
 
     // *Grabar la cabecera de archivo
@@ -98,19 +98,18 @@ ArbolEnDisco::~ArbolEnDisco()
     if (numEspacios > 0)
     {
         //Almacenar cada valor interior en disco
-    }
-    
-    //Almacenar cada valor interior en disco
-    int valorGuardar = 0;
-    while (!espaciosLibre.empty())
-    {
-        //Obtener el valor mas alto
-        valorGuardar = this->espaciosLibre.top();
-        //Eliminar el valor mas alto
-        espaciosLibre.pop();
+        int valorGuardar = 0;
+        //Almacenar cada valor interior en disco
+        while (!espaciosLibre.empty())
+        {
+            //Obtener el valor mas alto
+            valorGuardar = this->espaciosLibre.top();
+            //Eliminar el valor mas alto
+            espaciosLibre.pop();
 
-        //Almacenar el valor en disco
-        fileOUT.write(reinterpret_cast<char *>(&valorGuardar), sizeof(int));
+            //Almacenar el valor en disco
+            fileOUT.write(reinterpret_cast<char *>(&valorGuardar), sizeof(int));
+        }
     }
 
     // Cerrar el archivo

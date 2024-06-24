@@ -142,6 +142,9 @@ int main() {
 
     } while (repite);
 
+    gestionArbol.~ArbolEnDisco();
+    //Eliminar no es posible para gestionCiudadanos;
+
     return 0;
 }
 
@@ -357,12 +360,26 @@ void menu_Buscar() {
                 }
             } while (DNI.length() != 8 || !esNumero(DNI));
 
-            setColor(0xE, 0xA);
-            cout << "Persona encontrada\n";
-            setColor(0x7, 0xE);
+            
+            //Proceso de buscar datos desde archivos
+            {
+                int dniInt = stoi(DNI);
+                Nodo* nodo = gestionArbol.Buscar_Disco(arbolData_stream, dniInt);
+                if (nodo->id == -1)
+                {
+                    cout<< "No se encontro un usuario con DNI "<<dniInt;
+                }
+                else
+                {
+                    Ciudadano* encontrado = gestionCiudadanos.obtenerCiudadanoEnPos(nodo->elemento.id, false);
+                    setColor(0xE, 0xA);
+                    cout << "Persona encontrada\n";
+                    setColor(0x7, 0xE);
 
-            cout << "--------------DATOS----------------------\n";
-            cout << "nombre, apellido, etc";
+                    cout << "--------------DATOS----------------------\n";
+                    cout <<encontrado->datos;
+                }
+            }
 
             system("pause>nul");
             break;

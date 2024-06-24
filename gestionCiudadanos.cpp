@@ -15,7 +15,42 @@ CtrlCiudadano::CtrlCiudadano(const char *_filaName)
 {
     this->nroElementos = 0;
     this->nombreArchivo = _filaName;
+    
+    std::fstream fileIN(nombreArchivo, std::ios::in | std::ios::binary);
+
+    // Revisa que el archivo exista
+    if (fileIN.is_open())
+    {
+        // Si es que EXISTE
+        //  *Obtener los datos desde la cabecera
+        fileIN.seekg(0, std::ios::beg);
+        fileIN.read(reinterpret_cast<char *>(&this->nroElementos), sizeof(nroElementos));
+
+        // Cerrar el archivo
+        fileIN.close();
+    }
+    else
+    {
+        // SI EL ARCHIVO NO EXISTE
+        //* Crea un nuevo archivo
+        std::fstream fileOUT(nombreArchivo, std::ios::out | std::ios::binary);
+
+        // *Grabar la cabecera de archivo
+        fileOUT.seekp(0, std::ios::beg);
+        fileOUT.write(reinterpret_cast<char *>(&nroElementos), sizeof(nroElementos));
+
+        fileOUT.flush();
+        // Cerrar el archivo
+        fileOUT.close();
+    }
 }
+
+CtrlCiudadano::~CtrlCiudadano()
+{
+    
+}
+
+const int CtrlCiudadano::sizeCabecera = sizeof(int); //Se almacena un int al principio para la variable nroElementos
 
 string CtrlCiudadano::getNombreArchivo()
 {
@@ -31,7 +66,7 @@ int CtrlCiudadano::guardarCiudadano(Ciudadano *ciudadano, bool debug = false)
     myfile.open(nombreArchivo, ios::binary | ios::out | ios::app);
 
     // Moverse hasta el final del archivo
-    myfile.seekp(0, ios::end); // Ciudadano::getSizeofInd*this->nroElementos
+    myfile.seekp(sizeCabecera + nroElementos*Ciudadano::getSizeofInd, ios::beg);
 
     // Guardar la posicion actual del documento (o sea justo donde se va guardar al ciudadano)
     int pos = myfile.tellp();
@@ -45,6 +80,11 @@ int CtrlCiudadano::guardarCiudadano(Ciudadano *ciudadano, bool debug = false)
 
     // Cerrar el archivo por seguridad
     myfile.close();
+
+    // Calcula la posicion (id) 
+    pos = (pos - CtrlCiudadano::sizeCabecera) / Ciudadano::getSizeofInd;
+    // TODO Hace falta poner una validacion? en TEORIA no debe fallar este calculo
+    //  pero seria bueno agregar una validacion de que el id es un valor seguro
 
     if (debug)
     {
@@ -74,6 +114,8 @@ vector<int> CtrlCiudadano::guardarCiudadano_MASIVO(vector<Ciudadano *> vectorCiu
 
             // Guardar la posicion actual del documento (o sea justo donde se va guardar al ciudadano)
             pos = myfile.tellp();
+            // Calcula la posicion (id) 
+            pos = (pos - CtrlCiudadano::sizeCabecera) / Ciudadano::getSizeofInd;
             vectorIDs.push_back(pos);
 
             // Almacenar el ciudadano en binario
@@ -115,7 +157,7 @@ Ciudadano *CtrlCiudadano::obtenerCiudadanoEnPos(int id, bool debug = false)
         }
 
         // Mueve el puntero la cantidad de espacios necesarios
-        otroFile.seekg(Ciudadano::getSizeofInd * id, ios::beg);
+        otroFile.seekg(CtrlCiudadano::sizeCabecera + Ciudadano::getSizeofInd * id, ios::beg);
 
         // Lee los datos desde el binario y carga los datos al objeto
         otroFile.read(reinterpret_cast<char *>(&ciudadano->dni), sizeof(Ciudadano::dni));
@@ -145,6 +187,8 @@ Ciudadano *CtrlCiudadano::obtenerCiudadanoEnPos(int id, bool debug = false)
 
     // return Ciudadano(); //El compilador por algun motivo quiere que esto este aqui
 }
+
+
 
 /*
 int mainCiudadano()
