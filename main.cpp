@@ -128,7 +128,7 @@ CtrlCiudadano gestionCiudadanos(archivoCiudadano);
 Variables globales importantes
 */
 
-int mainPrincipal()
+int main()
 {
     // Menu principal
     bool repite = true;
@@ -750,7 +750,7 @@ int menu(const char titulo[], const char *opciones[], int n)
     return opcionSeleccionada;
 }
 
-int main() // main cargaMasiva
+int mainCarga() // main cargaMasiva
 {
     
     std::ifstream file("TF_datosDNI.csv"); // nombre del archivo CSV
